@@ -1,9 +1,10 @@
-﻿namespace Game;
-
-class Program
+﻿namespace HoleIO
 {
-    static void Main(string[] args)
+    internal static class Program
     {
-        Console.WriteLine("Hello, World!");
+        private static void Main(string[] args)
+        {
+            Console.WriteLine("Hello, World!");
+        }
     }
 }
