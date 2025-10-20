@@ -20,6 +20,18 @@
       <Content Include="..\Resources\Config\Engine.json">
         <Link>Resources\Config\Engine.json</Link>
       </Content>
+      <Content Include="..\Resources\Models\SM_Soulspear.fbx">
+        <Link>Resources\Models\SM_Soulspear.fbx</Link>
+      </Content>
+      <Content Include="..\Resources\Textures\T_Soulspear_D.tga">
+        <Link>Resources\Textures\T_Soulspear_D.tga</Link>
+      </Content>
+      <Content Include="..\Resources\Textures\T_Soulspear_N.tga">
+        <Link>Resources\Textures\T_Soulspear_N.tga</Link>
+      </Content>
+      <Content Include="..\Resources\Textures\T_Soulspear_S.tga">
+        <Link>Resources\Textures\T_Soulspear_S.tga</Link>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
