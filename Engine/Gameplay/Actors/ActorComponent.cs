@@ -6,12 +6,12 @@
 		{
 		}
 
-		public virtual void Tick(double dt)
+		public virtual void Tick()
 		{
 			
 		}
 
-		public virtual void Render(double dt)
+		public virtual void Render()
 		{
 			
 		}

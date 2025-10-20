@@ -80,29 +80,29 @@
 			}
 		}
 
-		public virtual void Tick(double dt)
+		public virtual void Tick()
 		{
 			foreach (ActorComponent component in this.components)
 			{
-				component.Tick(dt);
+				component.Tick();
 			}
 
 			foreach (ActorTransform child in this.Transform)
 			{
-				child.owner.Tick(dt);
+				child.owner.Tick();
 			}
 		}
 
-		public virtual void Render(double dt)
+		public virtual void Render()
 		{
 			foreach (ActorComponent component in this.components)
 			{
-				component.Render(dt);
+				component.Render();
 			}
 
 			foreach (ActorTransform child in this.Transform)
 			{
-				child.owner.Render(dt);
+				child.owner.Render();
 			}
 		}
 
