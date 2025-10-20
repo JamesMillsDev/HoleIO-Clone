@@ -8,11 +8,26 @@
         <AssemblyName>HoleIO</AssemblyName>
         <RootNamespace>HoleIO</RootNamespace>
         <LangVersion>latest</LangVersion>
+        <RunPostBuildEvent>Always</RunPostBuildEvent>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Engine\Engine.csproj" />
       <ProjectReference Include="..\Networking\Networking.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\Resources\Config\Engine.json">
+        <Link>Resources\Config\Engine.json</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.OpenGL" Version="2.22.0" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy /q /s /y &quot;$(SolutionDir)Resources\&quot; &quot;$(OutDir)Resources\&quot;" />
+    </Target>
 
 </Project>

@@ -1,10 +1,13 @@
-﻿namespace HoleIO
+﻿using HoleIO.Engine.Core;
+using HoleIO.Gameplay;
+
+namespace HoleIO
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
-            Console.WriteLine("Hello, World!");
+            Application.Open<HoleIoGameInstance>();
         }
     }
 }

@@ -1,0 +1,11 @@
+﻿{
+  "window":
+  {
+    "width": 1280,
+    "height": 720,
+    "title": "Hole.IO",
+    "fullscreen": false,
+    "maximised": true
+  },
+  "clearColor": "#FEFEFEFF"
+}
