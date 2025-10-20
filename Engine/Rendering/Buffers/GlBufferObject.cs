@@ -1,15 +1,15 @@
 ﻿using Silk.NET.OpenGL;
 
-namespace HoleIO.Engine.Rendering
+namespace HoleIO.Engine.Rendering.Buffers
 {
-    public class BufferObject<TDataType> : IDisposable
+    public class GlBufferObject<TDataType> : IDisposable
         where TDataType : unmanaged
     {
         private readonly uint handle;
         private readonly BufferTargetARB bufferType;
         private readonly GL gl;
 
-        public unsafe BufferObject(GL gl, Span<TDataType> data, BufferTargetARB bufferType)
+        public unsafe GlBufferObject(GL gl, Span<TDataType> data, BufferTargetARB bufferType)
         {
             this.gl = gl;
             this.bufferType = bufferType;

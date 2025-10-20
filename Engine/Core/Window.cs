@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using HoleIO.Engine.Utility;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -53,8 +54,7 @@ namespace HoleIO.Engine.Core
 		public bool Maximised { get; set; } = config.window.maximised;
 
 		internal GL? openGlContext;
-		
-		private IWindow? window;
+		internal IWindow? window;
 
 		private int width = config.window.width;
 		private int height = config.window.height;
@@ -109,7 +109,8 @@ namespace HoleIO.Engine.Core
 
 		private void NewFrame()
 		{
-			this.openGlContext?.Clear(ClearBufferMask.ColorBufferBit);
+			this.openGlContext?.Enable(EnableCap.DepthTest);
+			this.openGlContext?.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 		}
 	}
 }

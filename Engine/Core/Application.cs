@@ -1,5 +1,7 @@
-﻿using HoleIO.Engine.Gameplay;
+﻿using System.Numerics;
+using HoleIO.Engine.Gameplay;
 using HoleIO.Engine.Utility;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace HoleIO.Engine.Core
@@ -35,6 +37,11 @@ namespace HoleIO.Engine.Core
         public static GL OpenGlContext() => instance == null
             ? throw new InvalidOperationException("Application is not open.")
             : instance.window?.openGlContext!;
+
+        public static double Time => instance == null ? 0D : instance!.window!.window!.Time;
+
+        public static Vector2D<int> FramebufferSize =
+            instance == null ? Vector2D<int>.Zero : instance!.window!.window!.FramebufferSize;
 
         private readonly Config<EngineConfigData> config = new("Engine");
         private Window? window;

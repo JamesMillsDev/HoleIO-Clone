@@ -1,16 +1,15 @@
-﻿using HoleIO.Engine.Core;
-using Silk.NET.OpenGL;
+﻿using Silk.NET.OpenGL;
 
-namespace HoleIO.Engine.Rendering
+namespace HoleIO.Engine.Rendering.Buffers
 {
-    public class VertexArrayObject<TVertexType, TIndexType> : IDisposable
+    public class GlArrayObject<TVertexType, TIndexType> : IDisposable
         where TVertexType : unmanaged
         where TIndexType : unmanaged
     {
         private readonly uint handle;
         private readonly GL glContext;
 
-        public VertexArrayObject(GL glContext, BufferObject<TVertexType> vbo, BufferObject<TIndexType> ibo)
+        public GlArrayObject(GL glContext, GlBufferObject<TVertexType> vbo, GlBufferObject<TIndexType> ibo)
         {
             this.glContext = glContext;
 
