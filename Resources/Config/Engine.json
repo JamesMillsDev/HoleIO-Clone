@@ -5,7 +5,7 @@
     "height": 720,
     "title": "Hole.IO",
     "fullscreen": false,
-    "maximised": true
+    "maximised": false
   },
-  "clearColor": "#FEFEFEFF"
+  "clearColor": "#FFF0F0F0"
 }

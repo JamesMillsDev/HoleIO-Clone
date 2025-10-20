@@ -13,6 +13,5 @@ namespace HoleIO.Engine.Rendering
         public Vector3 tangent;
         public Vector3 biTangent;
         public Vector2 uv;
-        public Vector4 color;
     }
 }

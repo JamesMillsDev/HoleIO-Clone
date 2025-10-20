@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using HoleIO.Engine.Core;
-using HoleIO.Engine.Rendering.Buffers;
 using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using File = System.IO.File;
+using PrimitiveType = Silk.NET.OpenGL.PrimitiveType;
 
 namespace HoleIO.Engine.Rendering
 {
@@ -74,11 +74,6 @@ namespace HoleIO.Engine.Rendering
                     vertex.uv = new Vector2(texCoord.X, texCoord.Y);
                 }
 
-                if (mesh->MColors[0] != null)
-                {
-                    vertex.color = mesh->MColors[0][i];
-                }
-
                 vertices.Add(vertex);
             }
 
@@ -87,11 +82,19 @@ namespace HoleIO.Engine.Rendering
             for (uint i = 0; i < mesh->MNumFaces; i++)
             {
                 Face face = mesh->MFaces[i];
-                // retrieve all indices of the face and store them in the indices vector
-                for (uint j = 0; j < face.MNumIndices; j++)
+                
+                indices.Add(face.MIndices[1]);
+                indices.Add(face.MIndices[2]);
+                indices.Add(face.MIndices[0]);
+
+                if (face.MNumIndices != 4)
                 {
-                    indices.Add(face.MIndices[j]);
+                    continue;
                 }
+
+                indices.Add(face.MIndices[2]);
+                indices.Add(face.MIndices[3]);
+                indices.Add(face.MIndices[0]);
             }
         }
 
@@ -115,35 +118,43 @@ namespace HoleIO.Engine.Rendering
                 vertices.Add(vert.biTangent.Z);
                 vertices.Add(vert.uv.X);
                 vertices.Add(vert.uv.Y);
-                vertices.Add(vert.color.X);
-                vertices.Add(vert.color.Y);
-                vertices.Add(vert.color.Z);
-                vertices.Add(vert.color.W);
             }
 
             return vertices.ToArray();
         }
 
         private readonly GL? glContext;
-        private GlArrayObject<float, uint>? vao;
-        private GlBufferObject<float>? vbo;
-        private GlBufferObject<uint>? ibo;
+        private uint vao;
+        private uint vbo;
+        private uint ibo;
+        private uint triCount;
 
-        public void Render()
+        public unsafe void Render()
         {
-            if (this.vao == null)
+            if (this.vao == 0)
             {
                 throw new InvalidOperationException("Cannot render uninitialized mesh.");
             }
-            
-            vao.Bind();
+
+            if (this.glContext == null)
+            {
+                throw new NullReferenceException("glContext is null!");
+            }
+
+            this.glContext.BindVertexArray(this.vao);
+            if (this.ibo != 0)
+            {
+                this.glContext.DrawElements(PrimitiveType.Triangles, 3 * this.triCount, GLEnum.UnsignedInt, null);
+            }
+            else
+            {
+                this.glContext.DrawArrays(PrimitiveType.Triangles, 0, 3 * this.triCount);
+            }
         }
 
         public void Dispose()
         {
-            vao?.Dispose();
-            vbo?.Dispose();
-            ibo?.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private StaticMesh(GL glContext)
@@ -164,38 +175,68 @@ namespace HoleIO.Engine.Rendering
             return true;
         }
 
-        private void BindAttributes(List<Vertex> vertices, List<uint> indices)
+        private unsafe void BindAttributes(List<Vertex> vertices, List<uint> indices)
         {
             if (this.glContext == null)
             {
                 throw new InvalidOperationException("GL context not initialized.");
             }
+
+            this.vbo = this.glContext.GenBuffers(1);
+            this.vao = this.glContext.GenVertexArrays(1);
             
-            ibo = new GlBufferObject<uint>(this.glContext, indices.ToArray(), BufferTargetARB.ElementArrayBuffer);
-            vbo = new GlBufferObject<float>(this.glContext, BuildVertexBuffer(vertices), BufferTargetARB.ArrayBuffer);
-            vao = new GlArrayObject<float, uint>(this.glContext, vbo, ibo);
+            this.glContext.BindVertexArray(this.vao);
+            this.glContext.BindBuffer(GLEnum.ArrayBuffer, this.vbo);
+
+            Span<float> data = BuildVertexBuffer(vertices);
+            fixed (void* d = data)
+            {
+                this.glContext.BufferData(GLEnum.ArrayBuffer, (nuint)data.Length * sizeof(float), d, GLEnum.StaticDraw);
+            }
             
             uint index = 0;
             IntPtr offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.position));
-            vao.VertexAttributePointer(index++, 3, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32());
+            this.glContext.EnableVertexAttribArray(index);
+            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, false, Vertex.SizeInBytes, offset);
 
             offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.normal));
-            vao.VertexAttributePointer(index++, 3, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32(),
-                true);
+            this.glContext.EnableVertexAttribArray(index);
+            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
 
             offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.tangent));
-            vao.VertexAttributePointer(index++, 3, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32(),
-                true);
+            this.glContext.EnableVertexAttribArray(index);
+            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
 
             offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.biTangent));
-            vao.VertexAttributePointer(index++, 3, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32(),
-                true);
+            this.glContext.EnableVertexAttribArray(index);
+            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
 
             offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.uv));
-            vao.VertexAttributePointer(index++, 2, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32());
+            this.glContext.EnableVertexAttribArray(index);
+            this.glContext.VertexAttribPointer(index, 2, VertexAttribPointerType.Float, false, Vertex.SizeInBytes, offset);
 
-            offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.color));
-            vao.VertexAttributePointer(index, 4, VertexAttribPointerType.Float, Vertex.SizeInBytes, offset.ToInt32());
+            if (indices.Count != 0)
+            {
+                this.ibo = this.glContext.GenBuffers(1);
+                
+                this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, this.ibo);
+                
+                uint[] ind = indices.ToArray();
+                fixed (void* d = ind)
+                {
+                    this.glContext.BufferData(GLEnum.ElementArrayBuffer, (nuint)indices.Count * sizeof(uint), d, GLEnum.StaticDraw);
+                }
+
+                this.triCount = (uint)indices.Count / 3;
+            }
+            else
+            {
+                this.triCount = (uint)vertices.Count / 3;
+            }
+            
+            this.glContext.BindVertexArray(0);
+            this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, 0);
+            this.glContext.BindBuffer(GLEnum.ArrayBuffer, 0);
         }
     }
 }

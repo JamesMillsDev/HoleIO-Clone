@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Numerics;
 using HoleIO.Engine.Utility;
 using Silk.NET.Input;
 using Silk.NET.Maths;
@@ -29,6 +30,8 @@ namespace HoleIO.Engine.Core
 				this.window!.Size = new Vector2D<int>(this.width, this.height);
 			}
 		}
+
+		public Vector2 Size => new(this.Width, this.Height);
 
 		public string Title
 		{
