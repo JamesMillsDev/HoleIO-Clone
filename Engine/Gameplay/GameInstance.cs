@@ -6,8 +6,8 @@
 		
 		public abstract void BeginPlay();
 		
-		public abstract void Tick(double deltaTime);
-		public abstract void Render(double deltaTime);
+		public abstract void Tick();
+		public abstract void Render();
 		
 		public abstract void EndPlay();
 	}

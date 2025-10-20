@@ -73,15 +73,15 @@ namespace HoleIO.Engine.Core
 		private void Tick(double deltaTime)
 		{
 			Time.Tick(deltaTime, this.window!.window!.Time, this.window.window.WindowState == WindowState.Minimized);
-			this.gameInstance.Tick(deltaTime);
+			this.gameInstance.Tick();
 			this.gameInstance.currentScene.ApplyChanges();
-			this.gameInstance.currentScene.rootActor.Tick(deltaTime);
+			this.gameInstance.currentScene.rootActor.Tick();
 		}
 
 		private void Render(double deltaTime)
 		{
-			this.gameInstance.Render(deltaTime);
-			this.gameInstance.currentScene.rootActor.Render(deltaTime);
+			this.gameInstance.Render();
+			this.gameInstance.currentScene.rootActor.Render();
 		}
 
 		private void Unload()
