@@ -32,14 +32,14 @@
       <Content Include="..\Resources\Shaders\standard.vert.glsl">
         <Link>Resources\Shaders\standard.vert.glsl</Link>
       </Content>
-      <Content Include="..\Resources\Textures\T_Soulspear_D.tga">
-        <Link>Resources\Textures\T_Soulspear_D.tga</Link>
+      <Content Include="..\Resources\Textures\T_Soulspear_B.tga">
+        <Link>Resources\Textures\T_Soulspear_B.tga</Link>
       </Content>
       <Content Include="..\Resources\Textures\T_Soulspear_N.tga">
         <Link>Resources\Textures\T_Soulspear_N.tga</Link>
       </Content>
-      <Content Include="..\Resources\Textures\T_Soulspear_S.tga">
-        <Link>Resources\Textures\T_Soulspear_S.tga</Link>
+      <Content Include="..\Resources\Textures\T_Soulspear_ORM.tga">
+        <Link>Resources\Textures\T_Soulspear_ORM.tga</Link>
       </Content>
     </ItemGroup>
 
