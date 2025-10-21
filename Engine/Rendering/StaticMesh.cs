@@ -10,233 +10,380 @@ using PrimitiveType = Silk.NET.OpenGL.PrimitiveType;
 
 namespace HoleIO.Engine.Rendering
 {
-    public class StaticMesh : IDisposable
-    {
-        private static Assimp? assimp;
+	/// <summary>
+	/// Represents a static 3D mesh loaded from file and prepared for OpenGL rendering.
+	/// Handles loading models via Assimp, extracting geometry data, and managing GPU buffers.
+	/// </summary>
+	public class StaticMesh : IDisposable
+	{
+		// Singleton Assimp instance shared across all mesh loads
+		private static Assimp? assimp;
 
-        public static unsafe StaticMesh LoadFromAssimp(string filename, PostProcessSteps pp, bool flipTextureV = false)
-        {
-            assimp ??= Assimp.GetApi();
+		/// <summary>
+		/// Loads a static mesh from an FBX file using Assimp.
+		/// </summary>
+		/// <param name="filename">The name of the model file (without extension) in Resources/Models/</param>
+		/// <param name="pp">Post-processing steps to apply during import (triangulation, normals, etc.)</param>
+		/// <param name="flipTextureV">Whether to flip texture V coordinates (useful for OpenGL vs DirectX conventions)</param>
+		/// <returns>A loaded StaticMesh ready for rendering</returns>
+		/// <exception cref="FileNotFoundException">Thrown when the model file doesn't exist</exception>
+		/// <exception cref="InvalidOperationException">Thrown when import or buffer creation fails</exception>
+		public static unsafe StaticMesh LoadFromAssimp(string filename, PostProcessSteps pp, bool flipTextureV = false)
+		{
+			// Initialize Assimp API if not already done
+			assimp ??= Assimp.GetApi();
 
-            string modelPath = Path.Combine("Resources", "Models", $"{filename}.fbx");
-            if (!File.Exists(modelPath))
-            {
-                throw new FileNotFoundException("Model file not found", filename);
-            }
+			// Construct full path to the FBX model file
+			string modelPath = Path.Combine("Resources", "Models", $"{filename}.fbx");
+			if (!File.Exists(modelPath))
+			{
+				throw new FileNotFoundException("Model file not found", filename);
+			}
 
-            if (flipTextureV)
-            {
-                pp |= PostProcessSteps.FlipUVs;
-            }
-            AssimpScene* scene = assimp.ImportFile(modelPath, (uint)pp);
-            if (scene == null)
-            {
-                throw new InvalidOperationException("Failed to import model: " + filename);
-            }
+			// Add UV flipping to post-process steps if requested
+			if (flipTextureV)
+			{
+				pp |= PostProcessSteps.FlipUVs;
+			}
 
-            GL glContext = Application.OpenGlContext();
-            StaticMesh mesh = new(glContext);
-            return !mesh.CreateGlBuffers(scene->MMeshes[0])
-                ? throw new InvalidOperationException("Failed to create gl buffers.")
-                : mesh;
-        }
-        
-        private static unsafe void BuildVertices(AssimpMesh* mesh, out List<Vertex> vertices, out List<uint> indices)
-        {
-            vertices = [];
-            indices = [];
-            
-            for (uint i = 0; i < mesh->MNumVertices; i++)
-            {
-                Vertex vertex = new()
-                {
-                    position = mesh->MVertices[i]
-                };
+			// Import the scene from file with specified post-processing
+			AssimpScene* scene = assimp.ImportFile(modelPath, (uint)pp);
+			if (scene == null)
+			{
+				throw new InvalidOperationException("Failed to import model: " + filename);
+			}
 
-                if (mesh->MNormals != null)
-                {
-                    vertex.normal = mesh->MNormals[i];
-                }
+			// Create new mesh instance with current OpenGL context
+			GL glContext = Application.OpenGlContext();
+			StaticMesh mesh = new(glContext);
 
-                if (mesh->MTangents != null)
-                {
-                    vertex.tangent = mesh->MTangents[i];
-                }
+			// Extract scale factor from scene metadata if available
+			if (scene->MMetaData != null)
+			{
+				Metadata* metadata = scene->MMetaData;
 
-                if (mesh->MBitangents != null)
-                {
-                    vertex.biTangent = mesh->MBitangents[i];
-                }
+				// Iterate through all metadata properties
+				for (uint i = 0; i < metadata->MNumProperties; i++)
+				{
+					AssimpString key = metadata->MKeys[i];
+					MetadataEntry entry = metadata->MValues[i];
 
-                if (mesh->MTextureCoords[0] != null)
-                {
-                    Vector3 texCoord = mesh->MTextureCoords[0][i];
-                    vertex.uv = new Vector2(texCoord.X, texCoord.Y);
-                }
+					// Convert metadata key to string
+					string keyName = System.Text.Encoding.UTF8.GetString(
+						key.Data,
+						(int)key.Length
+					);
 
-                vertices.Add(vertex);
-            }
+					// Check if this is a scale factor property
+					if (keyName != "UnitScaleFactor" && keyName != "OriginalUnitScaleFactor" && keyName != "FileScale")
+					{
+						continue;
+					}
 
-            // now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding
-            // vertex indices.
-            for (uint i = 0; i < mesh->MNumFaces; i++)
-            {
-                Face face = mesh->MFaces[i];
-                
-                indices.Add(face.MIndices[1]);
-                indices.Add(face.MIndices[2]);
-                indices.Add(face.MIndices[0]);
+					// Extract scale factor based on data type
+					mesh.scaleFactor = entry.MType switch
+					{
+						MetadataType.Float => *(float*)entry.MData,
+						MetadataType.Double => (float)(*(double*)entry.MData),
+						_ => mesh.scaleFactor // Keep default if unknown type
+					};
+				}
+			}
 
-                if (face.MNumIndices != 4)
-                {
-                    continue;
-                }
+			// Create OpenGL buffers from the first mesh in the scene
+			bool flag = mesh.CreateGlBuffers(scene->MMeshes[0]);
 
-                indices.Add(face.MIndices[2]);
-                indices.Add(face.MIndices[3]);
-                indices.Add(face.MIndices[0]);
-            }
-        }
+			// Release Assimp scene memory
+			assimp.ReleaseImport(scene);
 
-        private static float[] BuildVertexBuffer(List<Vertex> verts)
-        {
-            List<float> vertices = [];
+			return flag ? mesh : throw new InvalidOperationException("Failed to create gl buffers.");
+		}
 
-            foreach (Vertex vert in verts)
-            {
-                vertices.Add(vert.position.X);
-                vertices.Add(vert.position.Y);
-                vertices.Add(vert.position.Z);
-                vertices.Add(vert.normal.X);
-                vertices.Add(vert.normal.Y);
-                vertices.Add(vert.normal.Z);
-                vertices.Add(vert.tangent.X);
-                vertices.Add(vert.tangent.Y);
-                vertices.Add(vert.tangent.Z);
-                vertices.Add(vert.biTangent.X);
-                vertices.Add(vert.biTangent.Y);
-                vertices.Add(vert.biTangent.Z);
-                vertices.Add(vert.uv.X);
-                vertices.Add(vert.uv.Y);
-            }
+		/// <summary>
+		/// Extracts vertex and index data from an Assimp mesh structure.
+		/// </summary>
+		/// <param name="mesh">Pointer to the Assimp mesh</param>
+		/// <param name="vertices">Output list of processed vertices</param>
+		/// <param name="indices">Output list of triangle indices</param>
+		private static unsafe void BuildVertices(AssimpMesh* mesh, out List<Vertex> vertices, out List<uint> indices)
+		{
+			vertices = [];
+			indices = [];
 
-            return vertices.ToArray();
-        }
+			// Process each vertex in the mesh
+			for (uint i = 0; i < mesh->MNumVertices; i++)
+			{
+				Vertex vertex = new()
+				{
+					position = mesh->MVertices[i]
+				};
 
-        private readonly GL? glContext;
-        private uint vao;
-        private uint vbo;
-        private uint ibo;
-        private uint triCount;
+				// Extract normal if available
+				if (mesh->MNormals != null)
+				{
+					vertex.normal = mesh->MNormals[i];
+				}
 
-        public unsafe void Render()
-        {
-            if (this.vao == 0)
-            {
-                throw new InvalidOperationException("Cannot render uninitialized mesh.");
-            }
+				// Extract tangent if available (used for normal mapping)
+				if (mesh->MTangents != null)
+				{
+					vertex.tangent = mesh->MTangents[i];
+				}
 
-            if (this.glContext == null)
-            {
-                throw new NullReferenceException("glContext is null!");
-            }
+				// Extract bitangent if available (used for normal mapping)
+				if (mesh->MBitangents != null)
+				{
+					vertex.biTangent = mesh->MBitangents[i];
+				}
 
-            this.glContext.BindVertexArray(this.vao);
-            if (this.ibo != 0)
-            {
-                this.glContext.DrawElements(PrimitiveType.Triangles, 3 * this.triCount, GLEnum.UnsignedInt, null);
-            }
-            else
-            {
-                this.glContext.DrawArrays(PrimitiveType.Triangles, 0, 3 * this.triCount);
-            }
-        }
+				// Extract texture coordinates from first UV channel if available
+				if (mesh->MTextureCoords[0] != null)
+				{
+					Vector3 texCoord = mesh->MTextureCoords[0][i];
+					vertex.uv = new Vector2(texCoord.X, texCoord.Y);
+				}
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
+				vertices.Add(vertex);
+			}
 
-        private StaticMesh(GL glContext)
-        {
-            this.glContext = glContext;
-        }
+			// Process each face (triangle or quad) and extract indices
+			for (uint i = 0; i < mesh->MNumFaces; i++)
+			{
+				Face face = mesh->MFaces[i];
 
-        private unsafe bool CreateGlBuffers(AssimpMesh* mesh)
-        {
-            if (this.glContext == null || mesh == null)
-            {
-                return false;
-            }
+				// Add first triangle with vertex order swapped (1, 2, 0)
+				// Note: This changes winding order, possibly for left-handed to right-handed conversion
+				indices.Add(face.MIndices[1]);
+				indices.Add(face.MIndices[2]);
+				indices.Add(face.MIndices[0]);
 
-            BuildVertices(mesh, out List<Vertex> vertices, out List<uint> indices);
-            BindAttributes(vertices, indices);
+				// If face is a quad (4 vertices), split into second triangle
+				if (face.MNumIndices != 4)
+				{
+					continue;
+				}
 
-            return true;
-        }
+				// Add second triangle of quad (2, 3, 0)
+				indices.Add(face.MIndices[2]);
+				indices.Add(face.MIndices[3]);
+				indices.Add(face.MIndices[0]);
+			}
+		}
 
-        private unsafe void BindAttributes(List<Vertex> vertices, List<uint> indices)
-        {
-            if (this.glContext == null)
-            {
-                throw new InvalidOperationException("GL context not initialized.");
-            }
+		/// <summary>
+		/// Converts vertex list into a flat float array for OpenGL buffer upload.
+		/// Layout: position(3), normal(3), tangent(3), bitangent(3), uv(2) per vertex.
+		/// </summary>
+		/// <param name="verts">List of vertices to convert</param>
+		/// <returns>Flat array of floats ready for GPU upload</returns>
+		private static float[] BuildVertexBuffer(List<Vertex> verts)
+		{
+			List<float> vertices = [];
 
-            this.vbo = this.glContext.GenBuffers(1);
-            this.vao = this.glContext.GenVertexArrays(1);
-            
-            this.glContext.BindVertexArray(this.vao);
-            this.glContext.BindBuffer(GLEnum.ArrayBuffer, this.vbo);
+			foreach (Vertex vert in verts)
+			{
+				// Position (XYZ)
+				vertices.Add(vert.position.X);
+				vertices.Add(vert.position.Y);
+				vertices.Add(vert.position.Z);
 
-            Span<float> data = BuildVertexBuffer(vertices);
-            fixed (void* d = data)
-            {
-                this.glContext.BufferData(GLEnum.ArrayBuffer, (nuint)data.Length * sizeof(float), d, GLEnum.StaticDraw);
-            }
-            
-            uint index = 0;
-            IntPtr offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.position));
-            this.glContext.EnableVertexAttribArray(index);
-            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, false, Vertex.SizeInBytes, offset);
+				// Normal (XYZ)
+				vertices.Add(vert.normal.X);
+				vertices.Add(vert.normal.Y);
+				vertices.Add(vert.normal.Z);
 
-            offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.normal));
-            this.glContext.EnableVertexAttribArray(index);
-            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
+				// Tangent (XYZ)
+				vertices.Add(vert.tangent.X);
+				vertices.Add(vert.tangent.Y);
+				vertices.Add(vert.tangent.Z);
 
-            offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.tangent));
-            this.glContext.EnableVertexAttribArray(index);
-            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
+				// Bitangent (XYZ)
+				vertices.Add(vert.biTangent.X);
+				vertices.Add(vert.biTangent.Y);
+				vertices.Add(vert.biTangent.Z);
 
-            offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.biTangent));
-            this.glContext.EnableVertexAttribArray(index);
-            this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes, offset);
+				// UV coordinates (XY)
+				vertices.Add(vert.uv.X);
+				vertices.Add(vert.uv.Y);
+			}
 
-            offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.uv));
-            this.glContext.EnableVertexAttribArray(index);
-            this.glContext.VertexAttribPointer(index, 2, VertexAttribPointerType.Float, false, Vertex.SizeInBytes, offset);
+			return vertices.ToArray();
+		}
 
-            if (indices.Count != 0)
-            {
-                this.ibo = this.glContext.GenBuffers(1);
-                
-                this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, this.ibo);
-                
-                uint[] ind = indices.ToArray();
-                fixed (void* d = ind)
-                {
-                    this.glContext.BufferData(GLEnum.ElementArrayBuffer, (nuint)indices.Count * sizeof(uint), d, GLEnum.StaticDraw);
-                }
+		/// <summary> Scale factor extracted from model metadata (default 1.0 = no scaling) </summary>
+		public float scaleFactor = 1f;
 
-                this.triCount = (uint)indices.Count / 3;
-            }
-            else
-            {
-                this.triCount = (uint)vertices.Count / 3;
-            }
-            
-            this.glContext.BindVertexArray(0);
-            this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, 0);
-            this.glContext.BindBuffer(GLEnum.ArrayBuffer, 0);
-        }
-    }
+		// OpenGL context for rendering operations
+		private readonly GL? glContext;
+
+		// OpenGL buffer handles
+		private uint vao; // Vertex Array Object
+		private uint vbo; // Vertex Buffer Object
+		private uint ibo; // Index Buffer Object
+
+		// Number of triangles to render
+		private uint triCount;
+
+
+		/// <summary>
+		/// Renders the mesh using the bound shader program.
+		/// Assumes shader and uniforms are already set up.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown if mesh hasn't been initialized</exception>
+		/// <exception cref="NullReferenceException">Thrown if GL context is null</exception>
+		public unsafe void Render()
+		{
+			if (this.vao == 0)
+			{
+				throw new InvalidOperationException("Cannot render uninitialized mesh.");
+			}
+
+			if (this.glContext == null)
+			{
+				throw new NullReferenceException("glContext is null!");
+			}
+
+			// Bind the vertex array containing all mesh data
+			this.glContext.BindVertexArray(this.vao);
+
+			// Use indexed or non-indexed drawing based on whether we have an index buffer
+			if (this.ibo != 0)
+			{
+				// Indexed drawing (more efficient, reuses vertices)
+				this.glContext.DrawElements(PrimitiveType.Triangles, 3 * this.triCount, GLEnum.UnsignedInt, null);
+			}
+			else
+			{
+				// Non-indexed drawing (less common)
+				this.glContext.DrawArrays(PrimitiveType.Triangles, 0, 3 * this.triCount);
+			}
+		}
+
+		/// <summary>
+		/// Disposes of GPU resources.
+		/// Note: Currently doesn't actually delete OpenGL buffers - should be implemented.
+		/// </summary>
+		public void Dispose()
+		{
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Private constructor - use LoadFromAssimp to create instances.
+		/// </summary>
+		/// <param name="glContext">OpenGL context for rendering</param>
+		private StaticMesh(GL glContext)
+		{
+			this.glContext = glContext;
+		}
+
+		/// <summary>
+		/// Creates OpenGL buffers from an Assimp mesh.
+		/// </summary>
+		/// <param name="mesh">Pointer to Assimp mesh data</param>
+		/// <returns>True if successful, false otherwise</returns>
+		private unsafe bool CreateGlBuffers(AssimpMesh* mesh)
+		{
+			if (this.glContext == null || mesh == null)
+			{
+				return false;
+			}
+
+			// Extract vertex and index data from Assimp mesh
+			BuildVertices(mesh, out List<Vertex> vertices, out List<uint> indices);
+
+			// Upload to GPU
+			BindAttributes(vertices, indices);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Creates and configures OpenGL buffers with vertex data.
+		/// Sets up vertex attributes for position, normal, tangent, bitangent, and UV.
+		/// </summary>
+		/// <param name="vertices">List of vertices to upload</param>
+		/// <param name="indices">List of indices to upload (empty for non-indexed)</param>
+		/// <exception cref="InvalidOperationException">Thrown if GL context not initialized</exception>
+		private unsafe void BindAttributes(List<Vertex> vertices, List<uint> indices)
+		{
+			if (this.glContext == null)
+			{
+				throw new InvalidOperationException("GL context not initialized.");
+			}
+
+			// Generate OpenGL objects
+			this.vbo = this.glContext.GenBuffers(1);
+			this.vao = this.glContext.GenVertexArrays(1);
+
+			// Bind VAO to capture subsequent state
+			this.glContext.BindVertexArray(this.vao);
+			this.glContext.BindBuffer(GLEnum.ArrayBuffer, this.vbo);
+
+			// Upload vertex data to GPU
+			Span<float> data = BuildVertexBuffer(vertices);
+			fixed (void* d = data)
+			{
+				this.glContext.BufferData(GLEnum.ArrayBuffer, (nuint)data.Length * sizeof(float), d, GLEnum.StaticDraw);
+			}
+
+			// Configure vertex attribute 0: Position (vec3)
+			uint index = 0;
+			IntPtr offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.position));
+			this.glContext.EnableVertexAttribArray(index);
+			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, false, Vertex.SizeInBytes,
+				offset);
+
+			// Configure vertex attribute 1: Normal (vec3, normalized)
+			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.normal));
+			this.glContext.EnableVertexAttribArray(index);
+			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+				offset);
+
+			// Configure vertex attribute 2: Tangent (vec3, normalized)
+			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.tangent));
+			this.glContext.EnableVertexAttribArray(index);
+			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+				offset);
+
+			// Configure vertex attribute 3: Bitangent (vec3, normalized)
+			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.biTangent));
+			this.glContext.EnableVertexAttribArray(index);
+			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+				offset);
+
+			// Configure vertex attribute 4: UV (vec2)
+			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.uv));
+			this.glContext.EnableVertexAttribArray(index);
+			this.glContext.VertexAttribPointer(index, 2, VertexAttribPointerType.Float, false, Vertex.SizeInBytes,
+				offset);
+
+			// Create and upload index buffer if indices exist
+			if (indices.Count != 0)
+			{
+				this.ibo = this.glContext.GenBuffers(1);
+				this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, this.ibo);
+
+				uint[] ind = indices.ToArray();
+				fixed (void* d = ind)
+				{
+					this.glContext.BufferData(GLEnum.ElementArrayBuffer, (nuint)indices.Count * sizeof(uint), d,
+						GLEnum.StaticDraw);
+				}
+
+				// Calculate triangle count from indices (3 indices per triangle)
+				this.triCount = (uint)indices.Count / 3;
+			}
+			else
+			{
+				// Calculate triangle count from vertices (3 vertices per triangle)
+				this.triCount = (uint)vertices.Count / 3;
+			}
+
+			// Unbind to prevent accidental modification
+			this.glContext.BindVertexArray(0);
+			this.glContext.BindBuffer(GLEnum.ElementArrayBuffer, 0);
+			this.glContext.BindBuffer(GLEnum.ArrayBuffer, 0);
+		}
+	}
 }

@@ -20,6 +20,9 @@
       <Content Include="..\Resources\Config\Engine.json">
         <Link>Resources\Config\Engine.json</Link>
       </Content>
+      <Content Include="..\Resources\Models\SM_Hole.fbx">
+        <Link>Resources\Models\SM_Hole.fbx</Link>
+      </Content>
       <Content Include="..\Resources\Models\SM_Soulspear.fbx">
         <Link>Resources\Models\SM_Soulspear.fbx</Link>
       </Content>

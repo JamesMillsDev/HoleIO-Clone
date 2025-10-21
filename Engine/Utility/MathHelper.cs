@@ -1,10 +1,7 @@
 ﻿namespace HoleIO.Engine.Utility
 {
-    public class MathHelper
+    public abstract class MathHelper
     {
-        public static float DegreesToRadians(float degrees)
-        {
-            return MathF.PI / 180f * degrees;
-        }
+        public static float Deg2Rad => MathF.PI / 180f;
     }
 }
