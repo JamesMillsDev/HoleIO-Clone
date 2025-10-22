@@ -41,10 +41,10 @@ namespace HoleIO.Engine.Gameplay.Actors
 				Vector3 pos = this.LocalPosition;
 				Vector3 scale = this.LocalScale;
 
-				// Rebuild matrix with new rotation
-				this.localMatrix = Matrix4x4.CreateTranslation(pos) *
+				// Rebuild matrix with new rotation (correct order: Scale -> Rotate -> Translate)
+				this.localMatrix = Matrix4x4.CreateScale(scale) *
 				                   Matrix4x4.CreateFromQuaternion(value) *
-				                   Matrix4x4.CreateScale(scale);
+				                   Matrix4x4.CreateTranslation(pos);
 			}
 		}
 
@@ -70,10 +70,10 @@ namespace HoleIO.Engine.Gameplay.Actors
 				Vector3 pos = this.LocalPosition;
 				Quaternion rot = this.LocalRotation;
 
-				// Rebuild matrix with new scale
-				this.localMatrix = Matrix4x4.CreateTranslation(pos) *
+				// Rebuild matrix with new scale (correct order: Scale -> Rotate -> Translate)
+				this.localMatrix = Matrix4x4.CreateScale(value) *
 				                   Matrix4x4.CreateFromQuaternion(rot) *
-				                   Matrix4x4.CreateScale(value);
+				                   Matrix4x4.CreateTranslation(pos);
 			}
 		}
 
@@ -159,7 +159,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 		#region Directional Vectors
 
 		/// <summary>
-		/// Gets the forward direction (positive Z axis) of the transform in world space.
+		/// Gets the forward direction (negative Z axis) of the transform in world space.
 		/// Normalized to unit length.
 		/// </summary>
 		public Vector3 Forward
@@ -167,7 +167,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 			get
 			{
 				Matrix4x4 worldMatrix = GetLocalToWorldMatrix();
-				return Vector3.Normalize(new Vector3(worldMatrix.M31, worldMatrix.M32, worldMatrix.M33));
+				return Vector3.Normalize(new Vector3(-worldMatrix.M31, -worldMatrix.M32, -worldMatrix.M33));
 			}
 		}
 

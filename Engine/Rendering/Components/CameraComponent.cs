@@ -35,13 +35,8 @@ namespace HoleIO.Engine.Rendering.Components
 			get
 			{
 				ActorTransform transform = this.Transform;
-				Vector3 forward = transform.Forward;
-
-				// Negate Z component of forward vector for coordinate system conversion
-				forward.Z *= -1;
-
 				// Create look-at matrix: position, target (position + forward direction), up vector
-				return Matrix4x4.CreateLookAt(transform.Position, transform.Position + forward, transform.Up);
+				return Matrix4x4.CreateLookAt(transform.Position, transform.Position + transform.Forward, transform.Up);
 			}
 		}
 

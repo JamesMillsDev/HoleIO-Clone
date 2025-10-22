@@ -148,6 +148,8 @@ namespace HoleIO.Engine.Core
 			// Update all active scenes and their actors
 			// (SceneManager.Tick internally calls Scene.Tick and Actor.Tick)
 			SceneManager.Instance.Tick();
+			
+			Input.ClearFrameState();
 		}
 
 		/// <summary>

@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using HoleIO.Engine.Core;
+using HoleIO.Engine.Debugging.Components;
 using HoleIO.Engine.Gameplay.Actors;
 using HoleIO.Engine.Rendering;
 using HoleIO.Engine.Rendering.Components;
@@ -28,6 +29,8 @@ namespace HoleIO.Gameplay.Scenes
 			Actor cameraActor = Spawn<Actor>();
 			cameraActor.AddComponent<CameraComponent>();
 			cameraActor.Transform.Position = new Vector3(0.0f, 4.0f, 10.0f);
+
+			cameraActor.AddComponent<DebugCameraControlsComponent>();
 
 			this.meshActor = Spawn<Actor>();
 			StaticMeshComponent mesh = this.meshActor.AddComponent<StaticMeshComponent>();

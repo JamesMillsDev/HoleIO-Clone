@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using HoleIO.Engine.Utility;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -155,11 +154,13 @@ namespace HoleIO.Engine.Core
 			};
 
 			// Register callbacks for the game loop
+			this.window.Load += () => Input.Initialize(this.window);
 			this.window.Load += load; // User initialization
 			this.window.Update += tick; // Game logic updates
 			this.window.Render += _ => NewFrame(); // Pre-render setup (clear screen, enable depth test)
 			this.window.Render += render; // User rendering
 			this.window.Closing += close; // Cleanup
+			this.window.Closing += Input.Shutdown;
 			this.window.Resize += newSize => this.openGlContext?.Viewport(new Size(newSize.X, newSize.Y));
 
 			// Start the main loop (blocks until window closes)
