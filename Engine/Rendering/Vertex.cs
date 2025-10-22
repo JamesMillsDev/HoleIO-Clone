@@ -22,14 +22,14 @@ namespace HoleIO.Engine.Rendering
         /// Position of the vertex in 3D space (XYZ).
         /// Location = 0
         /// </summary>
-        public Vector3 position;
+        public Vector4 position;
         
         /// <summary>
         /// Surface normal vector for lighting calculations (XYZ).
         /// Should be normalized to unit length.
         /// Location = 1
         /// </summary>
-        public Vector3 normal;
+        public Vector4 normal;
         
         /// <summary>
         /// Tangent vector for normal mapping (XYZ).
@@ -37,7 +37,7 @@ namespace HoleIO.Engine.Rendering
         /// Used to construct the TBN (Tangent-Bitangent-Normal) matrix for normal mapping.
         /// Location = 2
         /// </summary>
-        public Vector3 tangent;
+        public Vector4 tangent;
         
         /// <summary>
         /// Bitangent (binormal) vector for normal mapping (XYZ).
@@ -45,7 +45,7 @@ namespace HoleIO.Engine.Rendering
         /// Completes the TBN matrix for transforming normal maps from tangent space to world space.
         /// Location = 3
         /// </summary>
-        public Vector3 biTangent;
+        public Vector4 biTangent;
         
         /// <summary>
         /// Texture coordinates (UV).

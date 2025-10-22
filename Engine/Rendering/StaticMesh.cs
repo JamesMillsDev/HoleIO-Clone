@@ -115,25 +115,25 @@ namespace HoleIO.Engine.Rendering
 			{
 				Vertex vertex = new()
 				{
-					position = mesh->MVertices[i]
+					position = new Vector4(mesh->MVertices[i], 1f)
 				};
 
 				// Extract normal if available
 				if (mesh->MNormals != null)
 				{
-					vertex.normal = mesh->MNormals[i];
+					vertex.normal = new Vector4(mesh->MNormals[i], 0f);
 				}
 
 				// Extract tangent if available (used for normal mapping)
 				if (mesh->MTangents != null)
 				{
-					vertex.tangent = mesh->MTangents[i];
+					vertex.tangent = new Vector4(mesh->MTangents[i], 0f);
 				}
 
 				// Extract bitangent if available (used for normal mapping)
 				if (mesh->MBitangents != null)
 				{
-					vertex.biTangent = mesh->MBitangents[i];
+					vertex.biTangent = new Vector4(mesh->MBitangents[i], 0f);
 				}
 
 				// Extract texture coordinates from first UV channel if available
@@ -182,25 +182,29 @@ namespace HoleIO.Engine.Rendering
 
 			foreach (Vertex vert in verts)
 			{
-				// Position (XYZ)
+				// Position (XYZW)
 				vertices.Add(vert.position.X);
 				vertices.Add(vert.position.Y);
 				vertices.Add(vert.position.Z);
+				vertices.Add(vert.position.W);
 
-				// Normal (XYZ)
+				// Normal (XYZW)
 				vertices.Add(vert.normal.X);
 				vertices.Add(vert.normal.Y);
 				vertices.Add(vert.normal.Z);
+				vertices.Add(vert.normal.W);
 
-				// Tangent (XYZ)
+				// Tangent (XYZW)
 				vertices.Add(vert.tangent.X);
 				vertices.Add(vert.tangent.Y);
 				vertices.Add(vert.tangent.Z);
+				vertices.Add(vert.tangent.W);
 
-				// Bitangent (XYZ)
+				// Bitangent (XYZW)
 				vertices.Add(vert.biTangent.X);
 				vertices.Add(vert.biTangent.Y);
 				vertices.Add(vert.biTangent.Z);
+				vertices.Add(vert.biTangent.W);
 
 				// UV coordinates (XY)
 				vertices.Add(vert.uv.X);
@@ -327,29 +331,29 @@ namespace HoleIO.Engine.Rendering
 				this.glContext.BufferData(GLEnum.ArrayBuffer, (nuint)data.Length * sizeof(float), d, GLEnum.StaticDraw);
 			}
 
-			// Configure vertex attribute 0: Position (vec3)
+			// Configure vertex attribute 0: Position (vec4)
 			uint index = 0;
 			IntPtr offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.position));
 			this.glContext.EnableVertexAttribArray(index);
-			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, false, Vertex.SizeInBytes,
+			this.glContext.VertexAttribPointer(index++, 4, VertexAttribPointerType.Float, false, Vertex.SizeInBytes,
 				offset);
 
-			// Configure vertex attribute 1: Normal (vec3, normalized)
+			// Configure vertex attribute 1: Normal (vec4, normalized)
 			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.normal));
 			this.glContext.EnableVertexAttribArray(index);
-			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+			this.glContext.VertexAttribPointer(index++, 4, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
 				offset);
 
-			// Configure vertex attribute 2: Tangent (vec3, normalized)
+			// Configure vertex attribute 2: Tangent (vec4, normalized)
 			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.tangent));
 			this.glContext.EnableVertexAttribArray(index);
-			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+			this.glContext.VertexAttribPointer(index++, 4, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
 				offset);
 
-			// Configure vertex attribute 3: Bitangent (vec3, normalized)
+			// Configure vertex attribute 3: Bitangent (vec4, normalized)
 			offset = Marshal.OffsetOf<Vertex>(nameof(Vertex.biTangent));
 			this.glContext.EnableVertexAttribArray(index);
-			this.glContext.VertexAttribPointer(index++, 3, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
+			this.glContext.VertexAttribPointer(index++, 4, VertexAttribPointerType.Float, true, Vertex.SizeInBytes,
 				offset);
 
 			// Configure vertex attribute 4: UV (vec2)
