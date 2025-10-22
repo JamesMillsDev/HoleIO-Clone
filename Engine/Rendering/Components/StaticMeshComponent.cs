@@ -51,7 +51,7 @@ namespace HoleIO.Engine.Rendering.Components
 			// Combines actor's transform with mesh's scale factor (from file metadata)
 			// Scale factor converts from the mesh's original units to game units
 			this.Material.Shader.Set("model", this.Transform.GetLocalToWorldMatrix() *
-			                         Matrix4x4.CreateScale(Vector3.One * this.Mesh.scaleFactor));
+			                                  Matrix4x4.CreateScale(Vector3.One * this.Mesh.scaleFactor));
 
 			// Set the view matrix (camera position/orientation)
 			this.Material.Shader.Set("view", cam.View);

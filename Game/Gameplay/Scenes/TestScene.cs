@@ -33,7 +33,7 @@ namespace HoleIO.Gameplay.Scenes
 			mesh.Material = new Material(standard);
 			mesh.Mesh = spear;
 
-			mesh.Material.Textures["diffuse"] = new Texture("T_Soulspear_B", ETextureFormat.Tga);
+			mesh.Material.SetTexture("diffuse", new Texture("T_Soulspear_B", ETextureFormat.Tga));
 		}
 
 		public override void Tick()

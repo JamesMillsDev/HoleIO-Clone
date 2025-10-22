@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Numerics;
+using HoleIO.Engine.Utility;
 
 namespace HoleIO.Engine.Gameplay.Actors
 {
@@ -39,7 +40,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 				// Preserve position and scale while updating rotation
 				Vector3 pos = this.LocalPosition;
 				Vector3 scale = this.LocalScale;
-				
+
 				// Rebuild matrix with new rotation
 				this.localMatrix = Matrix4x4.CreateTranslation(pos) *
 				                   Matrix4x4.CreateFromQuaternion(value) *
@@ -68,7 +69,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 				// Preserve position and rotation while updating scale
 				Vector3 pos = this.LocalPosition;
 				Quaternion rot = this.LocalRotation;
-				
+
 				// Rebuild matrix with new scale
 				this.localMatrix = Matrix4x4.CreateTranslation(pos) *
 				                   Matrix4x4.CreateFromQuaternion(rot) *
@@ -381,31 +382,31 @@ namespace HoleIO.Engine.Gameplay.Actors
 
 			// Pitch (x-axis rotation)
 			double sinp = 2 * (q.W * q.Y - q.Z * q.X);
-			if (Math.Abs(sinp) >= 1)
+			if (Maths.Abs((float)sinp) >= 1)
 			{
 				// Gimbal lock case: use ±90 degrees
-				angles.X = (float)Math.CopySign(Math.PI / 2, sinp);
+				angles.X = Maths.Sign((float)sinp) * Maths.Pi / 2f;
 			}
 			else
 			{
-				angles.X = (float)Math.Asin(sinp);
+				angles.X = Maths.Asin((float)sinp);
 			}
 
 			// Yaw (y-axis rotation)
 			double sinyCosp = 2 * (q.W * q.Z + q.X * q.Y);
 			double cosyCosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
-			angles.Y = (float)Math.Atan2(sinyCosp, cosyCosp);
+			angles.Y = Maths.Atan2((float)sinyCosp, (float)cosyCosp);
 
 			// Roll (z-axis rotation)
 			double sinrCosp = 2 * (q.W * q.X + q.Y * q.Z);
 			double cosrCosp = 1 - 2 * (q.X * q.X + q.Y * q.Y);
-			angles.Z = (float)Math.Atan2(sinrCosp, cosrCosp);
+			angles.Z = Maths.Atan2((float)sinrCosp, (float)cosrCosp);
 
 			// Convert radians to degrees
 			return new Vector3(
-				angles.X * (180f / MathF.PI),
-				angles.Y * (180f / MathF.PI),
-				angles.Z * (180f / MathF.PI)
+				angles.X * Maths.Rad2Deg,
+				angles.Y * Maths.Rad2Deg,
+				angles.Z * Maths.Rad2Deg
 			);
 		}
 
@@ -419,9 +420,9 @@ namespace HoleIO.Engine.Gameplay.Actors
 		{
 			// Convert degrees to radians
 			Vector3 rad = new(
-				euler.X * (MathF.PI / 180f),
-				euler.Y * (MathF.PI / 180f),
-				euler.Z * (MathF.PI / 180f)
+				euler.X * Maths.Deg2Rad,
+				euler.Y * Maths.Deg2Rad,
+				euler.Z * Maths.Deg2Rad
 			);
 
 			// Create quaternion using yaw-pitch-roll order
@@ -429,7 +430,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 		}
 
 		#endregion
-		
+
 		#region IEnumerable Implementation
 
 		/// <summary>
@@ -449,7 +450,7 @@ namespace HoleIO.Engine.Gameplay.Actors
 		{
 			return GetEnumerator();
 		}
-		
+
 		#endregion
 	}
 }
