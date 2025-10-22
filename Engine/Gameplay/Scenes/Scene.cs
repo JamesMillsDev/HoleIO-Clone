@@ -1,5 +1,7 @@
 ﻿using HoleIO.Engine.Gameplay.Actors;
+using HoleIO.Engine.Rendering;
 using HoleIO.Engine.Rendering.Components;
+using HoleIO.Engine.Rendering.Lighting;
 
 namespace HoleIO.Engine.Gameplay.Scenes
 {
@@ -22,6 +24,12 @@ namespace HoleIO.Engine.Gameplay.Scenes
 		/// Gets the name identifier for this scene.
 		/// </summary>
 		public string Name { get; } = name;
+		
+		/// <summary>
+		/// Contains the lighting data for the current scene; i.e., ambient,
+		/// all lights in the scene, skybox, etc.
+		/// </summary>
+		public LightData LightData { get; } = new();
 
 		// Root actor that serves as the parent for all top-level actors in the scene
 		// All spawned actors without an explicit parent become children of this root
@@ -42,7 +50,10 @@ namespace HoleIO.Engine.Gameplay.Scenes
 		/// <returns>The newly created actor (not yet initialized)</returns>
 		public TActor Spawn<TActor>() where TActor : Actor, new()
 		{
-			TActor actor = new();
+			TActor actor = new()
+			{
+				Scene = this
+			};
 
 			this.pendingSpawn.Add(actor);
 

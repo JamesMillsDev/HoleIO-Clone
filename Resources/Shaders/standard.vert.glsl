@@ -11,9 +11,7 @@ uniform mat4 projection;
 out VS_OUT
 {
     vec4 position;
-    vec3 normal;
-    vec3 tangent;
-    vec3 biTangent; 
+    mat3 tbn;
     vec2 texCoords;
 } vs_out;
 
@@ -23,7 +21,11 @@ void main()
     gl_Position = projection * view * model * position;
     vs_out.position = model * position;
     vs_out.texCoords = texCoords;
-    vs_out.normal = (model * normal).xyz;
-    vs_out.tangent = (model * tangent).xyz;
-    vs_out.biTangent = cross(vs_out.normal, vs_out.tangent) * tangent.w;
+    
+    vec3 T = normalize(model * tangent).xyz;
+    vec3 N = normalize(model * normal).xyz;
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
+    
+    vs_out.tbn = mat3(T, B, N);
 }

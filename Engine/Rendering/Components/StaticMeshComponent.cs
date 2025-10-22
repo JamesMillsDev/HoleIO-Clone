@@ -45,7 +45,7 @@ namespace HoleIO.Engine.Rendering.Components
 			}
 
 			// Activate the shader program for rendering
-			this.Material.Bind();
+			this.Material.Bind(this.Actor.Scene.LightData);
 
 			// Set the model matrix (world transform)
 			// Combines actor's transform with mesh's scale factor (from file metadata)
@@ -58,6 +58,16 @@ namespace HoleIO.Engine.Rendering.Components
 
 			// Set the projection matrix (perspective/orthographic)
 			this.Material.Shader.Set("projection", cam.Projection);
+			
+			try
+			{
+				// Set the camera position vector (view matrix with no orientation)
+				this.Material.Shader.Set("cameraPosition", cam.Transform.Position);
+			}
+			catch (Exception)
+			{
+				// Ignored... this can be ignored as not all shaders need this uniform
+			}
 
 			// Issue the actual draw call to OpenGL
 			this.Mesh.Render();

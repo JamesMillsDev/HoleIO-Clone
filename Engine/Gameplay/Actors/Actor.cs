@@ -1,4 +1,6 @@
-﻿namespace HoleIO.Engine.Gameplay.Actors
+﻿using HoleIO.Engine.Gameplay.Scenes;
+
+namespace HoleIO.Engine.Gameplay.Actors
 {
 	/// <summary>
 	/// Base class for all game objects in the scene.
@@ -12,6 +14,11 @@
 		/// Every actor has exactly one transform.
 		/// </summary>
 		public ActorTransform Transform { get; }
+
+		/// <summary>
+		/// The reference to the scene that owns this actor.
+		/// </summary>
+		public Scene Scene { get; internal init; } = null!;
 
 		// Active components attached to this actor
 		private readonly List<ActorComponent> components = [];
