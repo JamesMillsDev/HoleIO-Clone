@@ -10,11 +10,39 @@ namespace HoleIO.Engine.Rendering
 	/// </summary>
 	public class Shader
 	{
-		// OpenGL program handle
+		private static readonly Dictionary<GLEnum, DepthFunction> DepthFunctionMappings = new()
+		{
+			{ GLEnum.Never, DepthFunction.Never },
+			{ GLEnum.Less, DepthFunction.Less },
+			{ GLEnum.Equal, DepthFunction.Equal },
+			{ GLEnum.Lequal, DepthFunction.Lequal },
+			{ GLEnum.Greater, DepthFunction.Greater },
+			{ GLEnum.Notequal, DepthFunction.Notequal },
+			{ GLEnum.Gequal, DepthFunction.Gequal },
+			{ GLEnum.Always, DepthFunction.Always }
+		};
+
+
+		/// <summary>
+		/// OpenGL program handle
+		/// </summary>
 		private readonly uint handle;
 
-		// OpenGL context for all GL operations
+		/// <summary>
+		/// OpenGL context for all GL operations
+		/// </summary>
 		private readonly GL glContext;
+
+		/// <summary>
+		/// The type of depth function to use per shader.
+		/// </summary>
+		private DepthFunction depthFunction = DepthFunction.Lequal;
+
+		/// <summary>
+		/// The depth function that is in use before this shader is bound.
+		/// Used to set the depth function back to previous value.
+		/// </summary>
+		private DepthFunction previousDepthFunction;
 
 		/// <summary>
 		/// Creates and links a shader program from multiple shader stages.
@@ -297,12 +325,18 @@ namespace HoleIO.Engine.Rendering
 			}
 		}
 
+		public void SetDepthFunc(DepthFunction value) => this.depthFunction = value;
+
 		/// <summary>
 		/// Activates this shader program for rendering.
 		/// All subsequent draw calls will use this shader until another is bound.
 		/// </summary>
 		public void Bind()
 		{
+			this.glContext.GetInteger(GLEnum.DepthFunc, out int depthFncVal);
+			this.previousDepthFunction = DepthFunctionMappings[(GLEnum)depthFncVal];
+
+			this.glContext.DepthFunc(this.depthFunction);
 			this.glContext.UseProgram(this.handle);
 		}
 
@@ -313,6 +347,7 @@ namespace HoleIO.Engine.Rendering
 		public void Unbind()
 		{
 			this.glContext.UseProgram(0);
+			this.glContext.DepthFunc(this.previousDepthFunction);
 		}
 
 		/// <summary>

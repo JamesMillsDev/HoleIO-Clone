@@ -1,10 +1,9 @@
-﻿using HoleIO.Engine.Core;
-using Silk.NET.Assimp;
+﻿using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace HoleIO.Engine.Rendering
+namespace HoleIO.Engine.Rendering.Textures
 {
 	/// <summary>
 	/// Supported texture file formats.
@@ -20,7 +19,7 @@ namespace HoleIO.Engine.Rendering
 	/// Represents an OpenGL texture that can be loaded from various image formats.
 	/// Handles texture creation, binding, and OpenGL resource management.
 	/// </summary>
-	public class Texture : IDisposable
+	public class Texture2D : Texture
 	{
 		/// <summary>
 		/// Converts a texture format enum to its corresponding file extension.
@@ -60,29 +59,13 @@ namespace HoleIO.Engine.Rendering
 		public uint Height { get; private set; }
 
 		/// <summary>
-		/// Gets the base filename of the texture (without extension or path).
-		/// </summary>
-		public string FileName { get; }
-
-		/// <summary>
-		/// OpenGL texture handle identifier.
-		/// </summary>
-		private uint handle;
-
-		/// <summary>
-		/// Reference to the OpenGL context for rendering operations.
-		/// </summary>
-		private readonly GL? glContext;
-
-		/// <summary>
 		/// Initializes a new texture from a file.
 		/// </summary>
 		/// <param name="fileName">The base filename without extension.</param>
 		/// <param name="format">The format of the texture file (defaults to PNG).</param>
-		public Texture(string fileName, ETextureFormat format = ETextureFormat.Png)
+		public Texture2D(string fileName, ETextureFormat format = ETextureFormat.Png)
+			: base(fileName, TextureTarget.Texture2D)
 		{
-			this.FileName = fileName;
-			this.glContext = Application.OpenGlContext();
 			this.TextureType = TextureType.None;
 			this.Format = format;
 			Load();
@@ -93,7 +76,7 @@ namespace HoleIO.Engine.Rendering
 		/// Creates mipmaps and sets texture parameters.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown when OpenGL context is null.</exception>
-		private unsafe void Load()
+		protected override unsafe void Load()
 		{
 			if (this.glContext == null)
 			{
@@ -133,35 +116,6 @@ namespace HoleIO.Engine.Rendering
 
 			// Configure texture parameters and generate mipmaps
 			SetParameters();
-		}
-
-		/// <summary>
-		/// Binds this texture to the specified texture unit for rendering.
-		/// </summary>
-		/// <param name="slot">The texture unit to bind to (defaults to Texture0).</param>
-		/// <exception cref="InvalidOperationException">Thrown when OpenGL context is null.</exception>
-		public void Bind(TextureUnit slot = TextureUnit.Texture0)
-		{
-			if (this.glContext == null)
-			{
-				throw new InvalidOperationException("OpenGL context is null.");
-			}
-
-			this.glContext.ActiveTexture(slot);
-			this.glContext.BindTexture(TextureTarget.Texture2D, this.handle);
-		}
-
-		/// <summary>
-		/// Releases the OpenGL texture resources.
-		/// </summary>
-		public void Dispose()
-		{
-			if (this.glContext != null && this.handle != 0)
-			{
-				this.glContext.DeleteTextures(1, this.handle);
-			}
-
-			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>

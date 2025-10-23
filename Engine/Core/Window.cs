@@ -151,10 +151,14 @@ namespace HoleIO.Engine.Core
 
 				// Initialize clear color
 				this.openGlContext.ClearColor(this.ClearColor);
+				
+				this.openGlContext.DepthFunc(DepthFunction.Less);
+				this.openGlContext.Enable(GLEnum.CullFace);
+				
+				Input.Initialize(this.window);
 			};
 
 			// Register callbacks for the game loop
-			this.window.Load += () => Input.Initialize(this.window);
 			this.window.Load += load; // User initialization
 			this.window.Update += tick; // Game logic updates
 			this.window.Render += _ => NewFrame(); // Pre-render setup (clear screen, enable depth test)

@@ -99,6 +99,261 @@ namespace HoleIO.Engine.Rendering
 			return flag ? mesh : throw new InvalidOperationException("Failed to create gl buffers.");
 		}
 
+		public static StaticMesh Cube(bool flipNormals = false)
+		{
+			float normalDirection = flipNormals ? -1.0f : 1.0f;
+
+			Vertex[] vertices = new Vertex[24]; // 4 vertices per face, 6 faces
+			uint[] indices = new uint[36]; // 6 indices per face, 6 faces
+
+			#region Vertices initialization
+
+			// Front face (Z+)
+			vertices[0] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, 0, normalDirection, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[1] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, 0, normalDirection, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[2] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, 0, normalDirection, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[3] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, 0, normalDirection, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			// Back face (Z-)
+			vertices[4] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, 0, -normalDirection, 0),
+				tangent = new Vector4(-1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[5] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, 0, -normalDirection, 0),
+				tangent = new Vector4(-1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[6] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, 0, -normalDirection, 0),
+				tangent = new Vector4(-1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[7] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, 0, -normalDirection, 0),
+				tangent = new Vector4(-1, 0, 0, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			// Top face (Y+)
+			vertices[8] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, -1, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[9] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, -1, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[10] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, -1, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[11] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, -1, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			// Bottom face (Y-)
+			vertices[12] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, -normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, 1, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[13] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(0, -normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, 1, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[14] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, -normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, 1, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[15] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(0, -normalDirection, 0, 0),
+				tangent = new Vector4(1, 0, 0, 0),
+				biTangent = new Vector4(0, 0, 1, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			// Right face (X+)
+			vertices[16] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, -1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[17] = new Vertex
+			{
+				position = new Vector4(0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, -1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[18] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, -1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[19] = new Vertex
+			{
+				position = new Vector4(0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, -1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			// Left face (X-)
+			vertices[20] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, -0.5f, 1.0f),
+				normal = new Vector4(-normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, 1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 0)
+			};
+			vertices[21] = new Vertex
+			{
+				position = new Vector4(-0.5f, -0.5f, 0.5f, 1.0f),
+				normal = new Vector4(-normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, 1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 0)
+			};
+			vertices[22] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, 0.5f, 1.0f),
+				normal = new Vector4(-normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, 1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(1, 1)
+			};
+			vertices[23] = new Vertex
+			{
+				position = new Vector4(-0.5f, 0.5f, -0.5f, 1.0f),
+				normal = new Vector4(-normalDirection, 0, 0, 0),
+				tangent = new Vector4(0, 0, 1, 0),
+				biTangent = new Vector4(0, 1, 0, 0),
+				uv = new Vector2(0, 1)
+			};
+
+			#endregion
+
+			// Generate indices (counter-clockwise winding for outward-facing normals)
+			for (uint i = 0; i < 6; i++)
+			{
+				uint faceStart = i * 4;
+				uint indexStart = i * 6;
+
+				if (flipNormals)
+				{
+					// Reverse winding order for flipped normals
+					indices[indexStart + 0] = faceStart + 0;
+					indices[indexStart + 1] = faceStart + 3;
+					indices[indexStart + 2] = faceStart + 2;
+					indices[indexStart + 3] = faceStart + 0;
+					indices[indexStart + 4] = faceStart + 2;
+					indices[indexStart + 5] = faceStart + 1;
+				}
+				else
+				{
+					indices[indexStart + 0] = faceStart + 0;
+					indices[indexStart + 1] = faceStart + 1;
+					indices[indexStart + 2] = faceStart + 2;
+					indices[indexStart + 3] = faceStart + 0;
+					indices[indexStart + 4] = faceStart + 2;
+					indices[indexStart + 5] = faceStart + 3;
+				}
+			}
+			
+			return LoadFromArrays(vertices.ToList(), indices.ToList());
+		}
+
+		private static StaticMesh LoadFromArrays(List<Vertex> vertices, List<uint> indices)
+		{
+			GL glContext = Application.OpenGlContext();
+			StaticMesh mesh = new(glContext);
+
+			mesh.BindAttributes(vertices, indices);
+
+			return mesh;
+		}
+
 		/// <summary>
 		/// Extracts vertex and index data from an Assimp mesh structure.
 		/// </summary>

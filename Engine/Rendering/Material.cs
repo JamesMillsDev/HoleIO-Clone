@@ -4,6 +4,7 @@ using HoleIO.Engine.Rendering.Components;
 using HoleIO.Engine.Rendering.Lighting;
 using HoleIO.Engine.Utility;
 using Silk.NET.OpenGL;
+using Texture = HoleIO.Engine.Rendering.Textures.Texture;
 
 namespace HoleIO.Engine.Rendering
 {
