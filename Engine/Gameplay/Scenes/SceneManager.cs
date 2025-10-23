@@ -50,18 +50,11 @@
 		/// Multiple scenes can be loaded simultaneously (additive loading).
 		/// </summary>
 		/// <param name="name">Name of the scene to load</param>
-		/// <exception cref="ArgumentException">Thrown if the scene doesn't exist</exception>
-		/// <exception cref="InvalidOperationException">Thrown if the scene is already loaded</exception>
 		public void Load(string name)
 		{
-			if (!this.scenes.TryGetValue(name, out Scene? scene))
+			if (!this.scenes.TryGetValue(name, out Scene? scene) || this.activeScenes.Contains(scene))
 			{
-				throw new ArgumentException($"Scene with name {name} does not exist");
-			}
-
-			if (this.activeScenes.Contains(scene))
-			{
-				throw new InvalidOperationException($"Scene with name {name} already loaded");
+				return;
 			}
 
 			// Queue load operation (deferred execution)
@@ -73,18 +66,11 @@
 		/// The scene won't be unloaded until ApplyChanges() is called.
 		/// </summary>
 		/// <param name="name">Name of the scene to unload</param>
-		/// <exception cref="ArgumentException">Thrown if the scene doesn't exist</exception>
-		/// <exception cref="InvalidOperationException">Thrown if the scene is not loaded</exception>
 		public void Unload(string name)
 		{
-			if (!this.scenes.TryGetValue(name, out Scene? scene))
+			if (!this.scenes.TryGetValue(name, out Scene? scene) || !this.activeScenes.Contains(scene))
 			{
-				throw new ArgumentException($"Scene with name {name} does not exist");
-			}
-
-			if (!this.activeScenes.Contains(scene))
-			{
-				throw new InvalidOperationException($"Scene with name {name} not loaded");
+				return;
 			}
 
 			// Queue unload operation (deferred execution)

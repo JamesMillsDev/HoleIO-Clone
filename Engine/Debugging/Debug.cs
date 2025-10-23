@@ -107,7 +107,7 @@ namespace HoleIO.Engine.Debugging
        {
           // Filter out messages below the configured verbosity threshold
           // Higher enum values = higher severity, so only log if message severity >= config severity
-          if ((int)verbosity < (int)Config.logVerbosity)
+          if ((int)verbosity > (int)Config.logVerbosity)
           {
              return;
           }

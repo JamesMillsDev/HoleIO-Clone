@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using HoleIO.Engine.Gameplay.Actors;
-using HoleIO.Engine.Gameplay.Scenes;
 
 namespace HoleIO.Engine.Rendering.Components
 {

@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using HoleIO.Engine.Core;
 using HoleIO.Engine.Gameplay.Actors;
+using HoleIO.Engine.Rendering.Bounds;
 using HoleIO.Engine.Utility;
 
 namespace HoleIO.Engine.Rendering.Components
@@ -71,5 +72,22 @@ namespace HoleIO.Engine.Rendering.Components
 		/// Default is 1000 units. Larger values reduce depth buffer precision.
 		/// </summary>
 		public float FarPlane { get; set; } = 1000f;
+
+		public Frustum Frustum
+		{
+			get; internal set;
+		} = null!;
+
+		private int frustrumRebuildFrameCounter;
+
+		public override void Tick()
+		{
+			// We will only rebuild the camera frustum every 4 frames
+			if (this.frustrumRebuildFrameCounter++ % 4 == 0)
+			{
+				this.Frustum = Culling.CreateFrustum(this.View, this.Projection);
+			}
+
+		}
 	}
 }

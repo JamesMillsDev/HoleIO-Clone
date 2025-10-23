@@ -1,10 +1,10 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using HoleIO.Engine.Core;
 using HoleIO.Engine.Debugging.Components;
 using HoleIO.Engine.Gameplay.Actors;
 using HoleIO.Engine.Rendering;
 using HoleIO.Engine.Rendering.Components;
+using HoleIO.Engine.Rendering.Textures;
 using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using Material = HoleIO.Engine.Rendering.Material;
@@ -19,7 +19,7 @@ namespace HoleIO.Gameplay.Scenes
 
 		public override void OnLoaded()
 		{
-			StaticMesh spear = StaticMesh.LoadFromAssimp("SM_Hole", PostProcessSteps.CalculateTangentSpace, true);
+			StaticMesh? spear = StaticMesh.LoadFromAssimp("SM_Soulspear", PostProcessSteps.CalculateTangentSpace, true);
 			Shader standard = new(
 				new(ShaderType.FragmentShader, "standard"),
 				new(ShaderType.VertexShader, "standard")
@@ -39,8 +39,8 @@ namespace HoleIO.Gameplay.Scenes
 			Actor skyboxActor = Spawn<Actor>();
 			skyboxActor.AddComponent<SkyboxComponent>();
 
-			/*mesh.Material.SetTexture("baseColorMap", new Texture("T_Soulspear_B", ETextureFormat.Tga));
-			mesh.Material.SetTexture("normalMap", new Texture("T_Soulspear_N", ETextureFormat.Tga));*/
+			mesh.Material.SetTexture("baseColorMap", new Texture2D("T_Soulspear_B", ETextureFormat.Tga));
+			mesh.Material.SetTexture("normalMap", new Texture2D("T_Soulspear_N", ETextureFormat.Tga));
 
 			// Directional light - white light from above-right
 			Actor directionalLightActor = Spawn<Actor>();
@@ -73,14 +73,6 @@ namespace HoleIO.Gameplay.Scenes
 			pointLight3.lightType = ELightType.Point;
 			pointLight3.color = Color.Lime;
 			pointLight3.intensity = 1.5f;
-		}
-
-		public override void Tick()
-		{
-			//Use elapsed time to convert to radians to allow our cube to rotate over time
-			float difference = Time.ElapsedTime * 100;
-
-			/*this.meshActor!.Transform.LocalEulerAngles = new Vector3(0, difference, 0);*/
 		}
 	}
 }

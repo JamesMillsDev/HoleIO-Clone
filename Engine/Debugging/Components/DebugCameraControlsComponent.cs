@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using HoleIO.Engine.Core;
 using HoleIO.Engine.Gameplay.Actors;
-using HoleIO.Engine.Utility;
 using Silk.NET.Input;
 
 namespace HoleIO.Engine.Debugging.Components
@@ -63,14 +62,14 @@ namespace HoleIO.Engine.Debugging.Components
                 float mouseDeltaY = Input.GetMouseDeltaY();
 
                 // Update our tracked rotation angles
-                this.yaw += this.turnSpeed * mouseDeltaX;
-                this.pitch += this.turnSpeed * mouseDeltaY;
+                this.yaw -= this.turnSpeed * mouseDeltaX;
+                this.pitch -= this.turnSpeed * mouseDeltaY;
 
                 // Clamp pitch to prevent camera flipping
                 this.pitch = Math.Clamp(this.pitch, -89f, 89f);
 
                 // Normalize yaw to stay within 0-360 range (prevents overflow)
-                this.yaw = this.yaw % 360f;
+                this.yaw %= 360f;
 
                 // Apply the rotation to transform
                 this.Transform.EulerAngles = new Vector3(this.pitch, this.yaw, 0f);

@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using HoleIO.Engine.Debugging;
 using HoleIO.Engine.Rendering.Components;
 using HoleIO.Engine.Rendering.Lighting;
 using HoleIO.Engine.Utility;
@@ -116,100 +115,57 @@ namespace HoleIO.Engine.Rendering
 			{
 				// Bind texture to unit i (Texture0 + i)
 				textures[i].Bind((TextureUnit)((int)TextureUnit.Texture0 + i));
-
-				try
-				{
-					// Set sampler uniform to point to this texture unit
-					this.Shader.Set(names[i], i);
-				}
-				catch (Exception e)
-				{
-					if (Debug.Config.logShaderExceptions)
-					{
-						// Log error but continue rendering (graceful degradation)
-						Debug.LogException(new Exception("Failed to set texture: '" + names[i] + "' - Error: " +
-						                                 e.Message));
-					}
-				}
+				// Set sampler uniform to point to this texture unit
+				this.Shader.Set(names[i], i);
 			}
 
 			// Apply all cached uniform values using type-appropriate setters
 			foreach (KeyValuePair<string, Tuple<object, Type>> uniformData in this.Uniforms)
 			{
-				try
-				{
-					// Lookup and invoke the appropriate setter function based on type
-					Functions[uniformData.Value.Item2].Invoke(uniformData.Key, uniformData.Value.Item1, this.Shader);
-				}
-				catch (Exception e)
-				{
-					if (Debug.Config.logShaderExceptions)
-					{
-						// Log error but continue rendering (graceful degradation)
-						Debug.LogException(new Exception("Failed to set uniform: '" + uniformData.Key + "' - Error: " +
-						                                 e.Message));
-					}
-				}
+				// Lookup and invoke the appropriate setter function based on type
+				Functions[uniformData.Value.Item2].Invoke(uniformData.Key, uniformData.Value.Item1, this.Shader);
 			}
 
 			// Set ambient lighting color (used as base illumination for all objects)
-			try
-			{
-				this.Shader.Set("ambientColor", lightData.ambientLightColor.ToVector3());
-			}
-			catch (Exception)
-			{
-				// Silently ignore - unlit shaders may not have lighting uniforms
-			}
+			this.Shader.Set("ambientColor", lightData.ambientLightColor.ToVector3());
 
 			// Iterate through all scene lights and set their shader uniforms
 			int pointIndex = 0, spotIndex = 0, directionalIndex = 0;
 			foreach (LightComponent light in lightData.Lights)
 			{
-				try
+				// Route to appropriate helper based on light type
+				switch (light.lightType)
 				{
-					// Route to appropriate helper based on light type
-					switch (light.lightType)
+					case ELightType.Directional:
 					{
-						case ELightType.Directional:
-						{
-							// Set directional light uniforms (infinite distance lights like sun)
-							MaterialLightingHelper.SetDirectionalLightUniforms(light, ref directionalIndex,
-								this.Shader);
-							break;
-						}
-						case ELightType.Point:
-						{
-							// Set point light uniforms (omnidirectional lights with attenuation)
-							MaterialLightingHelper.SetPointLightUniforms(light, ref pointIndex, this.Shader);
-							break;
-						}
-						case ELightType.Spot:
-						{
-							// Set spotlight uniforms (cone-shaped directional lights with attenuation)
-							MaterialLightingHelper.SetSpotLightUniforms(light, ref spotIndex, this.Shader);
-							break;
-						}
+						// Set directional light uniforms (infinite distance lights like sun)
+						MaterialLightingHelper.SetDirectionalLightUniforms(light, ref directionalIndex,
+							this.Shader);
+						break;
 					}
-				}
-				catch (Exception)
-				{
-					// Silently ignore - unlit shaders may not have lighting uniforms
+					case ELightType.Point:
+					{
+						// Set point light uniforms (omnidirectional lights with attenuation)
+						MaterialLightingHelper.SetPointLightUniforms(light, ref pointIndex, this.Shader);
+						break;
+					}
+					case ELightType.Spot:
+					{
+						// Set spotlight uniforms (cone-shaped directional lights with attenuation)
+						MaterialLightingHelper.SetSpotLightUniforms(light, ref spotIndex, this.Shader);
+						break;
+					}
+					default:
+					{
+						throw new InvalidOperationException("Somehow a light with no type is being rendered");
+					}
 				}
 			}
 
 			// Set the count of each light type for shader array iteration
-			try
-			{
-				this.Shader.Set("numDirectionalLights", directionalIndex);
-				// Spotlight count currently commented out - possibly not implemented yet
-				/*this.Shader.Set("numSpotLights", spotIndex);*/
-				this.Shader.Set("numPointLights", pointIndex);
-			}
-			catch (Exception)
-			{
-				// Silently ignore - unlit shaders may not have lighting uniforms
-			}
+			this.Shader.Set("numDirectionalLights", directionalIndex);
+			this.Shader.Set("numSpotLights", spotIndex);
+			this.Shader.Set("numPointLights", pointIndex);
 		}
 
 		/// <summary>

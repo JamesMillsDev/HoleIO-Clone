@@ -7,8 +7,7 @@ namespace HoleIO.Engine.Rendering.Textures
 	public class Cubemap : Texture
 	{
 		private static readonly List<string> TextureFaces = ["px", "nx", "py", "ny", "pz", "nz"];
-
-
+		
 		public Cubemap(string filename) : base(filename, TextureTarget.TextureCubeMap)
 		{
 			Load();
@@ -18,7 +17,7 @@ namespace HoleIO.Engine.Rendering.Textures
 		{
 			if (this.glContext == null)
 			{
-				throw new InvalidOperationException("OpenGL context is null.");
+				return;
 			}
 
 			this.handle = this.glContext.GenTextures(1);
@@ -50,7 +49,7 @@ namespace HoleIO.Engine.Rendering.Textures
 		{
 			if (this.glContext == null)
 			{
-				throw new InvalidOperationException("OpenGL context is null, cannot set texture parameters.");
+				return;
 			}
 
 			// Set filtering modes for minification (with mipmaps) and magnification
@@ -58,6 +57,13 @@ namespace HoleIO.Engine.Rendering.Textures
 				(int)GLEnum.Linear);
 			this.glContext.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter,
 				(int)GLEnum.Linear);
+			
+			this.glContext.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS,
+				(int)GLEnum.ClampToEdge);
+			this.glContext.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT,
+				(int)GLEnum.ClampToEdge);
+			this.glContext.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR,
+				(int)GLEnum.ClampToEdge);
 
 			// Set mipmap level range
 			this.glContext.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureBaseLevel, 0);

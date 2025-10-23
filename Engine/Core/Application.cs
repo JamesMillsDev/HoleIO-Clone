@@ -27,7 +27,7 @@ namespace HoleIO.Engine.Core
 		{
 			if (instance != null)
 			{
-				throw new InvalidOperationException("Application is already opened.");
+				return;
 			}
 
 			// Create application instance with new game instance
@@ -49,7 +49,7 @@ namespace HoleIO.Engine.Core
 		{
 			if (instance == null)
 			{
-				throw new InvalidOperationException("Application is not open.");
+				return;
 			}
 
 			instance.window!.Close();
@@ -61,9 +61,7 @@ namespace HoleIO.Engine.Core
 		/// </summary>
 		/// <returns>The active OpenGL context</returns>
 		/// <exception cref="InvalidOperationException">Thrown if no application is running</exception>
-		public static GL OpenGlContext() => instance == null
-			? throw new InvalidOperationException("Application is not open.")
-			: instance.window?.openGlContext!;
+		public static GL? OpenGlContext() => instance == null ? null : instance.window?.openGlContext!;
 
 		/// <summary>
 		/// Gets the global window instance.
@@ -71,9 +69,7 @@ namespace HoleIO.Engine.Core
 		/// </summary>
 		/// <returns>The active window</returns>
 		/// <exception cref="InvalidOperationException">Thrown if no application is running</exception>
-		public static Window OpenGlWindow() => instance == null
-			? throw new InvalidOperationException("Application is not open.")
-			: instance.window!;
+		public static Window? OpenGlWindow() => instance == null ? null : instance.window!;
 
 		// Engine configuration loaded from Resources/Config/Engine.json
 		private readonly Config<EngineConfigData> config = new("Engine");
@@ -148,7 +144,7 @@ namespace HoleIO.Engine.Core
 			// Update all active scenes and their actors
 			// (SceneManager.Tick internally calls Scene.Tick and Actor.Tick)
 			SceneManager.Instance.Tick();
-			
+
 			Input.ClearFrameState();
 		}
 

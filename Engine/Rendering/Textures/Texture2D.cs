@@ -80,7 +80,7 @@ namespace HoleIO.Engine.Rendering.Textures
 		{
 			if (this.glContext == null)
 			{
-				throw new InvalidOperationException("OpenGL context is null.");
+				return;
 			}
 
 			// Generate a new OpenGL texture handle

@@ -41,7 +41,7 @@ namespace HoleIO.Engine.Rendering.Textures
 		{
 			if (this.glContext == null)
 			{
-				throw new InvalidOperationException("OpenGL context is null.");
+				return;
 			}
 
 			this.glContext.ActiveTexture(slot);

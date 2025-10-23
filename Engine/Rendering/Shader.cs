@@ -31,7 +31,7 @@ namespace HoleIO.Engine.Rendering
 		/// <summary>
 		/// OpenGL context for all GL operations
 		/// </summary>
-		private readonly GL glContext;
+		private readonly GL? glContext;
 
 		/// <summary>
 		/// The type of depth function to use per shader.
@@ -59,6 +59,10 @@ namespace HoleIO.Engine.Rendering
 		public Shader(params KeyValuePair<ShaderType, string>[] files)
 		{
 			this.glContext = Application.OpenGlContext();
+			if (this.glContext == null)
+			{
+				return;
+			}
 
 			// Load and compile each shader stage
 			List<uint> stages = [];
@@ -105,10 +109,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public void Set(string name, int value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.Uniform1(loc, value);
@@ -122,10 +131,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public void Set(string name, float value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.Uniform1(loc, value);
@@ -139,10 +153,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public void Set(string name, Vector2 value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.Uniform2(loc, value);
@@ -156,10 +175,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public void Set(string name, Vector3 value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.Uniform3(loc, value);
@@ -173,10 +197,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public void Set(string name, Vector4 value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.Uniform4(loc, value);
@@ -192,10 +221,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, Matrix4x4 value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			this.glContext.UniformMatrix4(loc, 1, false, (float*)&value);
@@ -211,10 +245,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, int[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (int* d = value)
@@ -232,10 +271,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, float[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (float* d = value)
@@ -252,10 +296,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, Vector2[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (Vector2* d = value)
@@ -272,10 +321,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, Vector3[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (Vector3* d = value)
@@ -292,10 +346,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, Vector4[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (Vector4* d = value)
@@ -313,10 +372,15 @@ namespace HoleIO.Engine.Rendering
 		/// <exception cref="Exception">Thrown if uniform not found</exception>
 		public unsafe void Set(string name, Matrix4x4[] value)
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
-				throw new Exception($"{name} uniform not found on shader.");
+				return;
 			}
 
 			fixed (Matrix4x4* d = value)
@@ -333,6 +397,11 @@ namespace HoleIO.Engine.Rendering
 		/// </summary>
 		public void Bind()
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			this.glContext.GetInteger(GLEnum.DepthFunc, out int depthFncVal);
 			this.previousDepthFunction = DepthFunctionMappings[(GLEnum)depthFncVal];
 
@@ -346,6 +415,11 @@ namespace HoleIO.Engine.Rendering
 		/// </summary>
 		public void Unbind()
 		{
+			if (this.glContext == null)
+			{
+				return;
+			}
+			
 			this.glContext.UseProgram(0);
 			this.glContext.DepthFunc(this.previousDepthFunction);
 		}
@@ -363,6 +437,11 @@ namespace HoleIO.Engine.Rendering
 			// Expected path: Resources/Shaders/{file}.{ext}.glsl
 			string src = File.ReadAllText(Path.Combine("Resources", "Shaders", $"{file}.{GetExtension(type)}.glsl"));
 
+			if (this.glContext == null)
+			{
+				return 0;
+			}
+			
 			// Create shader object
 			uint stageHandle = this.glContext.CreateShader(type);
 

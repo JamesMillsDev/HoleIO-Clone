@@ -16,6 +16,20 @@ struct PointLight
     float quadratic;
 };
 
+struct SpotLight
+{
+    vec3 position;
+    vec3 direction;
+    vec3 color;
+    
+    float innerCutOff;
+    float outerCutOff;
+
+    float constant;
+    float linear;
+    float quadratic;
+};
+
 out vec4 FragColor;
 
 in VS_OUT
@@ -38,6 +52,9 @@ uniform DirectionalLight directionalLights[MAX_LIGHTS];
 
 uniform int numPointLights;
 uniform PointLight pointLights[MAX_LIGHTS];
+
+uniform int numSpotLights;
+uniform SpotLight spotLights[MAX_LIGHTS];
 
 uniform vec3 ambientColor;
 uniform int specularPower;
@@ -65,30 +82,50 @@ void main()
     // Add directional lights
     for (int i = 0; i < numDirectionalLights; i++)
     {
-        DirectionalLight dirL = directionalLights[i];
-        vec3 lightDir = normalize(-dirL.direction);
+        DirectionalLight light = directionalLights[i];
+        vec3 lightDir = normalize(-light.direction);
         float diff = max(dot(normal, lightDir), 0.0);
-        diffuseTotal += dirL.color * diff * baseColor;
+        diffuseTotal += light.color * diff * baseColor;
         
         vec3 reflectDir = reflect(-lightDir, normal);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), specFactor);
-        specularTotal += dirL.color * spec;
+        specularTotal += light.color * spec;
     }
 
     for (int i = 0; i < numPointLights; i++)
     {
-        PointLight pl = pointLights[i];
+        PointLight light = pointLights[i];
         
-        float distance = length(pl.position - fs_in.position.xyz);
-        float atten = 1.0 / (pl.constant + pl.linear * distance + pl.quadratic * (distance * distance));
+        float distance = length(light.position - fs_in.position.xyz);
+        float atten = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
         
-        vec3 lightDir = normalize(pl.position - fs_in.position.xyz);
-        float diff = max(dot(normal, lightDir), 0.0);
-        diffuseTotal += (pl.color * diff * baseColor) * atten;
-
+        vec3 lightDir = normalize(light.position - fs_in.position.xyz);
         vec3 reflectDir = reflect(-lightDir, normal);
+        float diff = max(dot(normal, lightDir), 0.0);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), specFactor);
-        specularTotal += (pl.color * spec) * atten;
+
+        diffuseTotal += (light.color * diff * baseColor) * atten;
+        specularTotal += (light.color * spec) * atten;
+    }
+    
+    for(int i = 0; i < numSpotLights; i++)
+    {
+        SpotLight light = spotLights[i];
+
+        float distance = length(light.position - fs_in.position.xyz);
+        float atten = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+        vec3 lightDir = normalize(light.position - fs_in.position.xyz);
+        vec3 reflectDir = reflect(-lightDir, normal);
+        float diff = max(dot(normal, lightDir), 0.0);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), specFactor);
+        
+        float theta = dot(lightDir, normalize(-light.direction));
+        float epsilon = light.innerCutOff - light.outerCutOff;
+        float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+
+        diffuseTotal += (light.color * diff * baseColor) * (atten * intensity);
+        specularTotal += (light.color * spec) * (atten * intensity);
     }
 
     vec3 totalColor = ambientTotal + diffuseTotal + specularTotal;

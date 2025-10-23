@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using HoleIO.Engine.Core;
+using HoleIO.Engine.Debugging;
 using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -28,7 +29,7 @@ namespace HoleIO.Engine.Rendering
 		/// <returns>A loaded StaticMesh ready for rendering</returns>
 		/// <exception cref="FileNotFoundException">Thrown when the model file doesn't exist</exception>
 		/// <exception cref="InvalidOperationException">Thrown when import or buffer creation fails</exception>
-		public static unsafe StaticMesh LoadFromAssimp(string filename, PostProcessSteps pp, bool flipTextureV = false)
+		public static unsafe StaticMesh? LoadFromAssimp(string filename, PostProcessSteps pp, bool flipTextureV = false)
 		{
 			// Initialize Assimp API if not already done
 			assimp ??= Assimp.GetApi();
@@ -37,7 +38,8 @@ namespace HoleIO.Engine.Rendering
 			string modelPath = Path.Combine("Resources", "Models", $"{filename}.fbx");
 			if (!File.Exists(modelPath))
 			{
-				throw new FileNotFoundException("Model file not found", filename);
+				Debug.LogError($"Model file for path: {modelPath} not found");
+				return null;
 			}
 
 			// Add UV flipping to post-process steps if requested
@@ -50,11 +52,12 @@ namespace HoleIO.Engine.Rendering
 			AssimpScene* scene = assimp.ImportFile(modelPath, (uint)pp);
 			if (scene == null)
 			{
-				throw new InvalidOperationException("Failed to import model: " + filename);
+				Debug.LogError($"Failed to import model: {filename}");
+				return null;
 			}
 
 			// Create new mesh instance with current OpenGL context
-			GL glContext = Application.OpenGlContext();
+			GL? glContext = Application.OpenGlContext();
 			StaticMesh mesh = new(glContext);
 
 			// Extract scale factor from scene metadata if available
@@ -96,7 +99,7 @@ namespace HoleIO.Engine.Rendering
 			// Release Assimp scene memory
 			assimp.ReleaseImport(scene);
 
-			return flag ? mesh : throw new InvalidOperationException("Failed to create gl buffers.");
+			return flag ? mesh : null;
 		}
 
 		public static StaticMesh Cube(bool flipNormals = false)
@@ -346,7 +349,7 @@ namespace HoleIO.Engine.Rendering
 
 		private static StaticMesh LoadFromArrays(List<Vertex> vertices, List<uint> indices)
 		{
-			GL glContext = Application.OpenGlContext();
+			GL? glContext = Application.OpenGlContext();
 			StaticMesh mesh = new(glContext);
 
 			mesh.BindAttributes(vertices, indices);
@@ -499,7 +502,7 @@ namespace HoleIO.Engine.Rendering
 
 			if (this.glContext == null)
 			{
-				throw new NullReferenceException("glContext is null!");
+				return;
 			}
 
 			// Bind the vertex array containing all mesh data
@@ -531,7 +534,7 @@ namespace HoleIO.Engine.Rendering
 		/// Private constructor - use LoadFromAssimp to create instances.
 		/// </summary>
 		/// <param name="glContext">OpenGL context for rendering</param>
-		private StaticMesh(GL glContext)
+		private StaticMesh(GL? glContext)
 		{
 			this.glContext = glContext;
 		}
@@ -568,7 +571,7 @@ namespace HoleIO.Engine.Rendering
 		{
 			if (this.glContext == null)
 			{
-				throw new InvalidOperationException("GL context not initialized.");
+				return;
 			}
 
 			// Generate OpenGL objects
