@@ -16,7 +16,7 @@ namespace HoleIO.Engine.Rendering
 		/// This UBO is bound to all shaders, allowing them to access camera matrices without individual uniform updates.
 		/// Improves performance by eliminating redundant matrix uploads per draw call.
 		/// </summary>
-		public static uint uboMatrices;
+		public static uint prjViewUboHandle;
 
 		/// <summary>
 		/// Maps OpenGL depth function enums to the engine's DepthFunction enum.
@@ -113,16 +113,16 @@ namespace HoleIO.Engine.Rendering
 
 			// Initialize the shared matrix UBO if it hasn't been created yet
 			// This only runs once for the first shader that's created
-			if (uboMatrices == 0)
+			if (prjViewUboHandle == 0)
 			{
 				// Calculate size of a single Matrix4x4 in bytes (typically 64 bytes)
 				uint matrixSize = (uint)Marshal.SizeOf<Matrix4x4>();
 
 				// Generate a new Uniform Buffer Object handle
-				uboMatrices = this.glContext.GenBuffers(1);
+				prjViewUboHandle = this.glContext.GenBuffers(1);
 
 				// Bind the UBO to configure it
-				this.glContext.BindBuffer(GLEnum.UniformBuffer, uboMatrices);
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, prjViewUboHandle);
 
 				// Allocate GPU memory for two matrices (projection and view)
 				// Pass null for data pointer to allocate uninitialized storage
@@ -135,7 +135,7 @@ namespace HoleIO.Engine.Rendering
 				// Bind the UBO to binding point 0, making it accessible to all shaders
 				// that declare "layout(std140, binding = 0) uniform Matrices"
 				// Range covers both matrices (offset 0, size = 2 matrices)
-				this.glContext.BindBufferRange(GLEnum.UniformBuffer, 0, uboMatrices, 0, 2 * matrixSize);
+				this.glContext.BindBufferRange(GLEnum.UniformBuffer, 0, prjViewUboHandle, 0, 2 * matrixSize);
 			}
 
 			// Detach shaders (no longer needed after linking)

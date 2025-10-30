@@ -121,7 +121,7 @@ namespace HoleIO.Engine.Gameplay.Scenes
 			CameraComponent? cam = this.Current?.MainCamera;
 
 			// Only update matrices if we have a valid camera, UBO exists, and OpenGL context is available
-			if (cam != null && Shader.uboMatrices != 0 && this.glContext != null)
+			if (cam != null && Shader.prjViewUboHandle != 0 && this.glContext != null)
 			{
 				// Calculate size of a single Matrix4x4 in bytes (typically 64 bytes - 16 floats * 4 bytes each)
 				uint matrixSize = (uint)Marshal.SizeOf<Matrix4x4>();
@@ -131,7 +131,7 @@ namespace HoleIO.Engine.Gameplay.Scenes
 				Matrix4x4 view = cam.View;
 
 				// Bind the Uniform Buffer Object (UBO) that stores shared matrix data across all shaders
-				this.glContext.BindBuffer(GLEnum.UniformBuffer, Shader.uboMatrices);
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, Shader.prjViewUboHandle);
 
 				// Upload projection matrix to the first slot (offset 0) of the UBO
 				this.glContext.BufferSubData(GLEnum.UniformBuffer, 0, matrixSize, (float*)&projection);
