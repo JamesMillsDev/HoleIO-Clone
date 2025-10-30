@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using HoleIO.Engine.Core;
 using Silk.NET.OpenGL;
 
@@ -10,6 +11,17 @@ namespace HoleIO.Engine.Rendering
 	/// </summary>
 	public class Shader
 	{
+		/// <summary>
+		/// Handle to the shared Uniform Buffer Object (UBO) that stores projection and view matrices.
+		/// This UBO is bound to all shaders, allowing them to access camera matrices without individual uniform updates.
+		/// Improves performance by eliminating redundant matrix uploads per draw call.
+		/// </summary>
+		public static uint uboMatrices;
+
+		/// <summary>
+		/// Maps OpenGL depth function enums to the engine's DepthFunction enum.
+		/// Used for converting between OpenGL's native depth test modes and the engine's abstraction layer.
+		/// </summary>
 		private static readonly Dictionary<GLEnum, DepthFunction> DepthFunctionMappings = new()
 		{
 			{ GLEnum.Never, DepthFunction.Never },
@@ -22,6 +34,17 @@ namespace HoleIO.Engine.Rendering
 			{ GLEnum.Always, DepthFunction.Always }
 		};
 
+		/// <summary>
+		/// GLSL code string that defines the shared matrix UBO layout.
+		/// This string is automatically injected into vertex shaders after the #version directive.
+		/// Uses std140 layout for consistent cross-platform memory alignment.
+		/// Contains projection and view matrices accessible by all shaders bound to binding point 0.
+		/// </summary>
+		private const string MatrixUniformString = "layout(std140) uniform Matrices\n" +
+		                                           "{\n" +
+		                                           "\tmat4 projection;\n" +
+		                                           "\tmat4 view;\n" +
+		                                           "};\n";
 
 		/// <summary>
 		/// OpenGL program handle
@@ -56,7 +79,7 @@ namespace HoleIO.Engine.Rendering
 		/// );
 		/// // Loads Resources/Shaders/basic.vert.glsl and basic.frag.glsl
 		/// </example>
-		public Shader(params KeyValuePair<ShaderType, string>[] files)
+		public unsafe Shader(params KeyValuePair<ShaderType, string>[] files)
 		{
 			this.glContext = Application.OpenGlContext();
 			if (this.glContext == null)
@@ -88,6 +111,33 @@ namespace HoleIO.Engine.Rendering
 					$"Program failed to link with error: {this.glContext.GetProgramInfoLog(this.handle)}");
 			}
 
+			// Initialize the shared matrix UBO if it hasn't been created yet
+			// This only runs once for the first shader that's created
+			if (uboMatrices == 0)
+			{
+				// Calculate size of a single Matrix4x4 in bytes (typically 64 bytes)
+				uint matrixSize = (uint)Marshal.SizeOf<Matrix4x4>();
+
+				// Generate a new Uniform Buffer Object handle
+				uboMatrices = this.glContext.GenBuffers(1);
+
+				// Bind the UBO to configure it
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, uboMatrices);
+
+				// Allocate GPU memory for two matrices (projection and view)
+				// Pass null for data pointer to allocate uninitialized storage
+				// StaticDraw hint indicates these matrices will be updated infrequently
+				this.glContext.BufferData(GLEnum.UniformBuffer, 2 * matrixSize, null, GLEnum.StaticDraw);
+
+				// Unbind the UBO after configuration
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, 0);
+
+				// Bind the UBO to binding point 0, making it accessible to all shaders
+				// that declare "layout(std140, binding = 0) uniform Matrices"
+				// Range covers both matrices (offset 0, size = 2 matrices)
+				this.glContext.BindBufferRange(GLEnum.UniformBuffer, 0, uboMatrices, 0, 2 * matrixSize);
+			}
+
 			// Detach shaders (no longer needed after linking)
 			foreach (uint stage in stages)
 			{
@@ -113,7 +163,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -135,7 +185,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -157,7 +207,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -179,7 +229,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -201,7 +251,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -225,7 +275,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -249,7 +299,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -275,7 +325,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -300,7 +350,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -325,7 +375,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -350,7 +400,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -376,7 +426,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			int loc = this.glContext.GetUniformLocation(this.handle, name);
 			if (loc == -1)
 			{
@@ -401,7 +451,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			this.glContext.GetInteger(GLEnum.DepthFunc, out int depthFncVal);
 			this.previousDepthFunction = DepthFunctionMappings[(GLEnum)depthFncVal];
 
@@ -419,7 +469,7 @@ namespace HoleIO.Engine.Rendering
 			{
 				return;
 			}
-			
+
 			this.glContext.UseProgram(0);
 			this.glContext.DepthFunc(this.previousDepthFunction);
 		}
@@ -441,7 +491,21 @@ namespace HoleIO.Engine.Rendering
 			{
 				return 0;
 			}
-			
+
+			int index = src.IndexOf("#version", StringComparison.Ordinal);
+			if (index == -1)
+			{
+				return 0;
+			}
+
+			if (type == ShaderType.VertexShader)
+			{
+				src = src.Insert(src.IndexOf('\n') + 1, MatrixUniformString);
+				src = src.Insert(
+					src.IndexOf(MatrixUniformString, StringComparison.Ordinal) + MatrixUniformString.Length,
+					"uniform mat4 model;\n");
+			}
+
 			// Create shader object
 			uint stageHandle = this.glContext.CreateShader(type);
 

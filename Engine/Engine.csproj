@@ -11,6 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="BepuPhysics" Version="2.5.0-beta.27" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
       <PackageReference Include="Silk.NET.Assimp" Version="2.22.0" />
       <PackageReference Include="Silk.NET.Input" Version="2.22.0" />

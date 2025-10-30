@@ -1,4 +1,11 @@
-﻿namespace HoleIO.Engine.Gameplay.Scenes
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
+using HoleIO.Engine.Core;
+using HoleIO.Engine.Rendering.Components;
+using Silk.NET.OpenGL;
+using Shader = HoleIO.Engine.Rendering.Shader;
+
+namespace HoleIO.Engine.Gameplay.Scenes
 {
 	/// <summary>
 	/// Manages all game scenes, handling loading, unloading, and scene lifecycle.
@@ -29,6 +36,8 @@
 		// Queue of pending load/unload operations
 		// Item1: Scene to modify, Item2: true = load, false = unload
 		private readonly List<Tuple<Scene, bool>> pendingChange = [];
+
+		private GL? glContext;
 
 		/// <summary>
 		/// Registers a scene with the manager, making it available for loading.
@@ -84,6 +93,8 @@
 		/// </summary>
 		internal void Tick()
 		{
+			this.glContext ??= Application.OpenGlContext();
+
 			// Apply any pending scene load/unload operations
 			ApplyChanges();
 
@@ -104,8 +115,34 @@
 		/// Renders all active scenes and their actors.
 		/// Called once per frame by the game loop after Tick().
 		/// </summary>
-		internal void Render()
+		internal unsafe void Render()
 		{
+			// Get the active camera from the current scene
+			CameraComponent? cam = this.Current?.MainCamera;
+
+			// Only update matrices if we have a valid camera, UBO exists, and OpenGL context is available
+			if (cam != null && Shader.uboMatrices != 0 && this.glContext != null)
+			{
+				// Calculate size of a single Matrix4x4 in bytes (typically 64 bytes - 16 floats * 4 bytes each)
+				uint matrixSize = (uint)Marshal.SizeOf<Matrix4x4>();
+
+				// Get current camera matrices for rendering
+				Matrix4x4 projection = cam.Projection;
+				Matrix4x4 view = cam.View;
+
+				// Bind the Uniform Buffer Object (UBO) that stores shared matrix data across all shaders
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, Shader.uboMatrices);
+
+				// Upload projection matrix to the first slot (offset 0) of the UBO
+				this.glContext.BufferSubData(GLEnum.UniformBuffer, 0, matrixSize, (float*)&projection);
+
+				// Upload view matrix to the second slot (offset = one matrix size) of the UBO
+				this.glContext.BufferSubData(GLEnum.UniformBuffer, new IntPtr(matrixSize), matrixSize, (float*)&view);
+
+				// Unbind the UBO to prevent accidental modifications
+				this.glContext.BindBuffer(GLEnum.UniformBuffer, 0);
+			}
+
 			// Render scene-specific visuals for all active scenes
 			foreach (Scene scene in this.activeScenes)
 			{
